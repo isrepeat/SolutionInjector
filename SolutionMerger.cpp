@@ -1,6 +1,5 @@
 #include <Helpers/Logger.h>
 #include "SolutionMerger.h"
-#include "GuidGenerator.h"
 
 namespace Core {
 	SolutionMerger::SolutionMerger(

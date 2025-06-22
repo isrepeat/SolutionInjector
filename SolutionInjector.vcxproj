@@ -137,7 +137,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="SolutionProject.h" />
-    <ClInclude Include="LocalHelpers.h" />
     <ClInclude Include="Singletons\Constants.h" />
     <ClInclude Include="SolutionStructure.h" />
     <ClInclude Include="SolutionMerger.h" />
