@@ -5,10 +5,39 @@
       <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
       <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
     </Filter>
+    <Filter Include="Source Files\Singletons">
+      <UniqueIdentifier>{8973c8e5-fdb3-409e-b98c-6635686669f4}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="SolutionMerger.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Singletons\Constants.cpp">
+      <Filter>Source Files\Singletons</Filter>
+    </ClCompile>
+    <ClCompile Include="SolutionStructure.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="LocalHelpers.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SolutionMerger.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Singletons\Constants.h">
+      <Filter>Source Files\Singletons</Filter>
+    </ClInclude>
+    <ClInclude Include="SolutionStructure.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SolutionProject.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

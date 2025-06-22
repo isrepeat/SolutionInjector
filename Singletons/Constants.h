@@ -12,6 +12,5 @@ namespace Core::Singletons {
 		~Constants() = default;
 
 	public:
-		const std::regex projectRe;
 	};
 }

@@ -132,15 +132,14 @@
   <ItemGroup>
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Singletons\Constants.cpp" />
-    <ClCompile Include="SolutionFile.cpp" />
+    <ClCompile Include="SolutionStructure.cpp" />
     <ClCompile Include="SolutionMerger.cpp" />
-    <ClCompile Include="ProjectBlock.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="GuidGenerator.h" />
-    <ClInclude Include="ProjectBlock.h" />
+    <ClInclude Include="SolutionProject.h" />
+    <ClInclude Include="LocalHelpers.h" />
     <ClInclude Include="Singletons\Constants.h" />
-    <ClInclude Include="SolutionFile.h" />
+    <ClInclude Include="SolutionStructure.h" />
     <ClInclude Include="SolutionMerger.h" />
   </ItemGroup>
   <ItemGroup>

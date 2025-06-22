@@ -2,6 +2,5 @@
 
 namespace Core::Singletons {
 	Constants::Constants()
-		: projectRe("Project\\(\"\\{([^\"]+)\\}\"\\) = \"([^\"]+)\", \"([^\"]+)\", \"\\{([^\"]+)\\}\"")
 	{}
 }

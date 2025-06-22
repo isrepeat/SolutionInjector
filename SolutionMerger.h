@@ -1,38 +1,54 @@
 #pragma once
-#include "SolutionFile.h"
-#include "GuidGenerator.h"
+#include <Helpers/Flags.h>
+#include <Helpers/Guid.h>
+#include "SolutionStructure.h"
 #include <unordered_set>
 #include <unordered_map>
-#include <string>
-#include <vector>
 
 namespace Core {
 	class SolutionMerger {
 	public:
-		void Merge(
-			const std::string& targetPath,
-			const std::string& sourcePath,
-			const std::unordered_set<std::string>& selectedProjectNames,
-			const std::unordered_set<std::string>& selectedFolderNames
+		enum MergeFlags {
+			None,
+			IncludeParentsForFolders,
+		};
+
+	public:
+		SolutionMerger(
+			SolutionStructure& sourceSlnStructure,
+			SolutionStructure& targetSlnStructure
 		);
+
+		bool Merge(
+			const std::unordered_set<std::string>& projectNamesToInsert,
+			const std::unordered_set<std::string>& folderNamesToInsert,
+			H::Flags<MergeFlags> mergeFlags = MergeFlags::None);
 
 	private:
-		void CollectDescendantProjects(
-			const SolutionFile& source,
-			const std::unordered_map<std::string, std::string>& guidToName,
-			const std::unordered_map<std::string, std::string>& nestedMap,
-			const std::string& parentGuid,
-			std::unordered_set<std::string>& selectedProjectNames
-		);
+		void CollectProjectsAndFoldersToInsert(
+			const std::unordered_set<std::string>& projectNamesToInsert,
+			const std::unordered_set<std::string>& folderNamesToInsert,
+			H::Flags<MergeFlags> mergeFlags,
+			std::vector<std::shared_ptr<SolutionProject>>& outProjects);
 
-		std::vector<std::string> GenerateUpdatedNestedLines(
-			const std::vector<std::string>& original,
-			const std::unordered_map<std::string, std::string>& guidMap
-		);
+		void CollectParentsRecursive(
+			const std::shared_ptr<SolutionProject>& project,
+			std::unordered_set<H::Guid>& visitedGuids,
+			std::vector<std::shared_ptr<SolutionProject>>& outProjects);
 
-		std::vector<std::string> GenerateUpdatedConfigLines(
-			const SolutionFile& source,
-			const std::unordered_map<std::string, std::string>& guidMap
-		);
+		void CollectDescendantsRecursive(
+			const std::shared_ptr<SolutionProject>& folder,
+			std::unordered_set<H::Guid>& visitedGuids,
+			std::vector<std::shared_ptr<SolutionProject>>& outProjects);
+
+		std::vector<std::shared_ptr<SolutionProject>> CloneProjectsPreservingHierarchy(const std::vector<std::shared_ptr<SolutionProject>>& sourceProjects);
+
+		void RemapGuidsIfNeeded(std::vector<std::shared_ptr<SolutionProject>>& projects);
+		void InsertProjectsIntoTargetSln(const std::vector<std::shared_ptr<SolutionProject>>& projects);
+
+	private:
+		SolutionStructure& sourceSlnStructure;
+		SolutionStructure& targetSlnStructure;
+		std::unordered_map<H::Guid, H::Guid> guidRemap;
 	};
 }
