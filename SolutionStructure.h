@@ -20,6 +20,8 @@ namespace Core {
 		SolutionStructure(std::filesystem::path solutionPath);
 		
 		bool Parse();
+		bool IsParsed() const;
+
 		std::vector<std::string> SerializeToSln() const;
 		
 		std::filesystem::path GetSolutionPath() const;

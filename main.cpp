@@ -12,8 +12,12 @@ int main(int argc, char* argv[]) {
 		"Path_to_executable",
 		"d:\\WORK\\C++\\KeyboardLayerService\\UtilityHelpersLib\\UtilityHelpersLib.sln",
 		"d:\\WORK\\C++\\KeyboardLayerService\\KeyboardLayerService.sln",
-		"-f", "Spdlog",
-		//"-p", "Helpers.Raw"
+		"-f", "3rdParty",
+		"-p", "ComAPI",
+		"-p", "ComAPI.Shared",
+		"-p", "Helpers.Raw",
+		"-p", "Helpers.Shared",
+		"-p", "Helpers.Includes",
 	};
 	argc = sizeof(debugArgs) / sizeof(debugArgs[0]);
 	argv = const_cast<char**>(debugArgs);
@@ -22,12 +26,18 @@ int main(int argc, char* argv[]) {
 	// Init logger
 	H::Flags<lg::InitFlags> loggerInitFlags =
 		lg::InitFlags::DefaultFlags |
-		lg::InitFlags::EnableLogToStdout;
+		lg::InitFlags::EnableLogToStdout |
+		lg::InitFlags::CreateInExeFolderForDesktop;
 
-	lg::DefaultLoggers::Init(L"D:\\SolutionInjector.log", loggerInitFlags);
+	lg::DefaultLoggers::Init(L"SolutionInjector.log", loggerInitFlags);
+
+	LOG_DEBUG_D("Received arguments (argc = {}):", argc);
+	for (int i = 0; i < argc; ++i) {
+		LOG_DEBUG_D("  argv[{}] = '{}'", i, argv[i]);
+	}
 
 	if (argc < 4) {
-		LOG_RAW("Usage: SlnMerger <target.sln> <source.sln> [-f FolderName]* [-p ProjectName]*");
+		LOG_DEBUG_D("Usage: SlnMerger <target.sln> <source.sln> [-f FolderName]* [-p ProjectName]*");
 		return 1;
 	}
 
@@ -35,14 +45,20 @@ int main(int argc, char* argv[]) {
 	std::string targetSlnPath = argv[2];
 	std::unordered_set<std::string> projectsToInsert;
 	std::unordered_set<std::string> foldersToInsert;
+	std::optional<std::string> rootFolderNameOpt;
 
 	for (int i = 3; i < argc; ++i) {
 		std::string arg = argv[i];
 		if (arg == "-f" && i + 1 < argc) {
 			foldersToInsert.insert(argv[++i]);
-		} else if (arg == "-p" && i + 1 < argc) {
+		}
+		else if (arg == "-p" && i + 1 < argc) {
 			projectsToInsert.insert(argv[++i]);
-		} else {
+		}
+		else if (arg == "--rootName" && i + 1 < argc) {
+			rootFolderNameOpt = argv[++i];
+		}
+		else {
 			LOG_ERROR_D("Unknown or incomplete argument: {}", arg);
 		}
 	}
@@ -59,27 +75,28 @@ int main(int argc, char* argv[]) {
 		return 1;
 	}
 
-	LOG_DEBUG_D("Target sln before:");
+	LOG_DEBUG_D("targetSlnStructure:");
 	targetSlnStructure.LogSerializedSolution();
 
 	auto solutionMerger = Core::SolutionMerger{
-		sourceSlnStructure,
-		targetSlnStructure
+		sourceSlnStructure
 	};
 
-	bool isMergeSuccessfull = solutionMerger.Merge(
+	auto targetSlnStructureNew = solutionMerger.Merge(
+		targetSlnStructure,
 		projectsToInsert,
 		foldersToInsert,
-		Core::SolutionMerger::MergeFlags::None
+		Core::SolutionMerger::MergeFlags::None,
+		rootFolderNameOpt
 	);
-	if (!isMergeSuccessfull) {
+	if (!targetSlnStructureNew) {
 		LOG_ERROR_D("Merge failed");
 		return 1;
 	}
 
-	LOG_DEBUG_D("Target sln after:");
-	targetSlnStructure.LogSerializedSolution();
-	//targetSlnStructure.Save();
+	LOG_DEBUG_D("targetSlnStructure new:");
+	targetSlnStructureNew->LogSerializedSolution();
+	targetSlnStructureNew->Save();
 
 #ifdef _DEBUG
 	system("pause");

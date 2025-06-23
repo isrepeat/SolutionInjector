@@ -21,9 +21,10 @@ namespace Core {
 		std::regex projectLineParser(R"_rx_(Project\("\{([^\"]+)\}"\) = "([^\"]+)", "([^\"]+)", "\{([^\"]+)\}")_rx_");
 
 		std::regex solutionConfigsSectionStart(R"_rx_(\s*GlobalSection\(SolutionConfigurationPlatforms\) = preSolution)_rx_");
+		std::regex solutionConfigLineParser(R"_rx_(^\s*([^\|]+)\|([^\.\s]+)\s*=\s*(\S+))_rx_");
 
 		std::regex projectConfigsSectionStart(R"_rx_(\s*GlobalSection\(ProjectConfigurationPlatforms\) = postSolution)_rx_");
-		std::regex projectConfigLineParser(R"_rx_(\s*\{([0-9A-F\-]+)\}\.([^\=]+) = (.+))_rx_");
+		std::regex projectConfigLineParser(R"_rx_(^\s*\{([A-F0-9\-]+)\}\.([^\|]+)\|([^\.\s]+)\.([A-Za-z]+)(?:\.(\d+))?\s*=\s*(\S+))_rx_");
 
 		std::regex nestedProjectsSectionStart(R"_rx_(\s*GlobalSection\(NestedProjects\) = preSolution)_rx_");
 		std::regex nestedProjectsLineParser(R"_rx_(\s*\{([0-9A-F\-]+)\} = \{([0-9A-F\-]+)\})_rx_");
@@ -89,13 +90,20 @@ namespace Core {
 				if (line.find("EndGlobalSection") != std::string::npos) {
 					currentSection = ParseSection::None;
 				}
-				else if (std::regex_search(line, match, keyValueParser)) {
-					auto key = match[1].str();
-					auto value = match[2].str();
+				else if (std::regex_search(line, match, solutionConfigLineParser)) {
+					std::string config = match[1].str();
+					std::string platform = match[2].str();
+					std::string value = match[3].str();
 
-					this->solutionConfigurations.push_back(ConfigEntry{ key, value });
+					ConfigEntry configEntry;
+					configEntry.key = std::format("{}|{}", config, platform);
+					configEntry.value = value;
+					configEntry.configuration = config;
+					configEntry.platform = platform;
+					configEntry.configurationAndPlatform = std::format("{}|{}", config, platform);
+
+					this->solutionConfigurations.push_back(configEntry);
 				}
-
 				break;
 
 			case ParseSection::ProjectConfigurations:
@@ -103,13 +111,31 @@ namespace Core {
 					currentSection = ParseSection::None;
 				}
 				else if (std::regex_search(line, match, projectConfigLineParser)) {
-					auto guid = H::Guid::Parse(match[1].str());
-					auto key = match[2].str();
-					auto value = match[3].str();
+					H::Guid guid = H::Guid::Parse(match[1].str());
+					std::string config = match[2].str();
+					std::string platform = match[3].str();
+					std::string action = match[4].str();
+					std::string indexStr = match[5].matched ? match[5].str() : "0";
+					std::string value = match[6].str();
+
+					ConfigEntry configEntry;
+					configEntry.key = std::format("{}|{}.{}{}",
+						config,
+						platform,
+						action,
+						match[5].matched ? std::format(".{}", indexStr) : ""
+					);
+					configEntry.value = value;
+					configEntry.configuration = config;
+					configEntry.platform = platform;
+					configEntry.action = action;
+					configEntry.index = std::stoi(indexStr);
+
+					configEntry.configurationAndPlatform = std::format("{}|{}", config, platform);
 
 					auto it = this->projectsMap.find(guid);
 					if (it != this->projectsMap.end()) {
-						it->second->configurations.push_back({ key, value });
+						it->second->configurations.push_back(configEntry);
 					}
 				}
 				break;
@@ -183,6 +209,10 @@ namespace Core {
 		}
 
 		return true;
+	}
+
+	bool SolutionStructure::IsParsed() const {
+		return !this->projectsMap.empty();
 	}
 
 

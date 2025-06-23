@@ -4,6 +4,7 @@
 #include "SolutionStructure.h"
 #include <unordered_set>
 #include <unordered_map>
+#include <optional>
 
 namespace Core {
 	class SolutionMerger {
@@ -14,22 +15,39 @@ namespace Core {
 		};
 
 	public:
-		SolutionMerger(
-			SolutionStructure& sourceSlnStructure,
-			SolutionStructure& targetSlnStructure
-		);
+		explicit SolutionMerger(const SolutionStructure& sourceSlnStructure);
 
-		bool Merge(
+		std::unique_ptr<SolutionStructure> Merge(
+			const SolutionStructure& targetSlnStructure,
 			const std::unordered_set<std::string>& projectNamesToInsert,
 			const std::unordered_set<std::string>& folderNamesToInsert,
-			H::Flags<MergeFlags> mergeFlags = MergeFlags::None);
+			const H::Flags<MergeFlags> mergeFlags = MergeFlags::None,
+			const std::optional<std::string> rootFolderNameOpt = std::nullopt);
 
 	private:
-		void CollectProjectsAndFoldersToInsert(
-			const std::unordered_set<std::string>& projectNamesToInsert,
-			const std::unordered_set<std::string>& folderNamesToInsert,
-			H::Flags<MergeFlags> mergeFlags,
-			std::vector<std::shared_ptr<SolutionProject>>& outProjects);
+		struct MergeContext {
+			const SolutionStructure& targetSlnStructure;
+			const std::unordered_set<std::string>& projectNamesToInsert;
+			const std::unordered_set<std::string>& folderNamesToInsert;
+			const H::Flags<MergeFlags> mergeFlags;
+			const std::optional<std::string> rootFolderNameOpt;
+
+			MergeContext(
+				const SolutionStructure& targetSlnStructure,
+				const std::unordered_set<std::string>& projectNamesToInsert,
+				const std::unordered_set<std::string>& folderNamesToInsert,
+				const H::Flags<MergeFlags> mergeFlags,
+				const std::optional<std::string> rootFolderNameOpt)
+				: targetSlnStructure{ targetSlnStructure }
+				, projectNamesToInsert{ projectNamesToInsert }
+				, folderNamesToInsert{ folderNamesToInsert }
+				, mergeFlags{ mergeFlags }
+				, rootFolderNameOpt{ rootFolderNameOpt } 
+			{}
+		};
+
+
+		std::vector<std::shared_ptr<SolutionProject>> CollectProjectsAndFoldersToInsert(MergeContext& ctx);
 
 		void CollectParentsRecursive(
 			const std::shared_ptr<SolutionProject>& project,
@@ -37,18 +55,22 @@ namespace Core {
 			std::vector<std::shared_ptr<SolutionProject>>& outProjects);
 
 		void CollectDescendantsRecursive(
-			const std::shared_ptr<SolutionProject>& folder,
+			const std::shared_ptr<SolutionProject>& project,
 			std::unordered_set<H::Guid>& visitedGuids,
 			std::vector<std::shared_ptr<SolutionProject>>& outProjects);
 
-		std::vector<std::shared_ptr<SolutionProject>> CloneProjectsPreservingHierarchy(const std::vector<std::shared_ptr<SolutionProject>>& sourceProjects);
+		std::vector<std::shared_ptr<SolutionProject>> CloneProjectsPreservingHierarchy(
+			const std::vector<std::shared_ptr<SolutionProject>>& sourceProjects);
 
-		void RemapGuidsIfNeeded(std::vector<std::shared_ptr<SolutionProject>>& projects);
-		void InsertProjectsIntoTargetSln(const std::vector<std::shared_ptr<SolutionProject>>& projects);
+		//void RemapGuidsIfNeeded(
+		//	std::vector<std::shared_ptr<SolutionProject>>& projects,
+		//	MergeContext& ctx);
+
+		std::shared_ptr<SolutionProject> CreateInsertedRootFolder(
+			const std::vector<std::shared_ptr<SolutionProject>>& projects,
+			MergeContext& ctx);
 
 	private:
-		SolutionStructure& sourceSlnStructure;
-		SolutionStructure& targetSlnStructure;
-		std::unordered_map<H::Guid, H::Guid> guidRemap;
+		const SolutionStructure& sourceSlnStructure;
 	};
 }

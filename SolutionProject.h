@@ -6,8 +6,15 @@
 
 namespace Core {
 	struct ConfigEntry {
-		std::string key;   // например, "Debug|x64.ActiveCfg"
-		std::string value; // например, "Debug|x64"
+		std::string key;   // Debug|x86.Build.0
+		std::string value; // Debug|Win32
+								    
+		std::string configuration; // Debug
+		std::string platform;      // x64
+		std::string action;        // ActiveCfg / Build / Deploy / Run
+		int index = 0;			    
+								    
+		std::string configurationAndPlatform; // "Debug|x86"
 	};
 
 
