@@ -230,10 +230,12 @@ namespace Core {
 			}
 
 			// Пересчитать путь относительно target
-			project->projectPath = std::filesystem::relative(
-				std::filesystem::absolute(sourceSlnDir / project->projectPath),
-				targetSlnDir
-			);
+			if (project->projectTypeGuid != SolutionStructure::SolutionFolderGuid) {
+				project->projectPath = std::filesystem::relative(
+					std::filesystem::absolute(sourceSlnDir / project->projectPath),
+					targetSlnDir
+				);
+			}
 
 			// Пересчитать пути shared записей
 			for (auto& shared : project->sharedMsBuildProjectFiles) {
