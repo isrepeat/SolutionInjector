@@ -1,8 +1,9 @@
 #include "SolutionStructure.h"
 #include <Helpers/Logger.h>
-#include <format>
+
 #include <algorithm>
 #include <fstream>
+#include <format>
 #include <regex>
 
 
@@ -63,8 +64,15 @@ namespace Core {
 					auto path = match[3].str();
 					auto guid = H::Guid::Parse(match[4].str());
 
-					auto project = std::make_shared<SolutionProject>(typeGuid, guid, name, path);
-					this->projectsMap[guid] = project;
+					std::ex::shared_ptr<SolutionNode> solutionNode;
+					if (typeGuid == SolutionStructure::SolutionFolderGuid) {
+						solutionNode = std::ex::make_shared_ex<SolutionFolder>(typeGuid, guid, name, path);
+					}
+					else {
+						solutionNode = std::ex::make_shared_ex<ProjectNode>(typeGuid, guid, name, path);
+					}
+
+					this->mapGuidToSolutionNode[guid] = solutionNode;
 				}
 				else if (std::regex_search(line, match, solutionConfigsSectionStart)) {
 					currentSection = ParseSection::SolutionConfigurations;
@@ -133,9 +141,10 @@ namespace Core {
 
 					configEntry.configurationAndPlatform = std::format("{}|{}", config, platform);
 
-					auto it = this->projectsMap.find(guid);
-					if (it != this->projectsMap.end()) {
-						it->second->configurations.push_back(configEntry);
+					auto it = this->mapGuidToSolutionNode.find(guid);
+					if (it != this->mapGuidToSolutionNode.end()) {
+						auto projectNode = it->second.Cast<ProjectNode>();
+						projectNode->configurations.push_back(configEntry);
 					}
 				}
 				break;
@@ -144,20 +153,18 @@ namespace Core {
 				if (line.find("EndGlobalSection") != std::string::npos) {
 					currentSection = ParseSection::None;
 				}
-				else if (currentSection == ParseSection::NestedProjects) {
-					if (line.find("EndGlobalSection") != std::string::npos) {
-						currentSection = ParseSection::None;
-					}
-					else if (std::regex_search(line, match, nestedProjectsLineParser)) {
-						auto childGuid = H::Guid::Parse(match[1].str());
-						auto parentGuid = H::Guid::Parse(match[2].str());
+				else if (std::regex_search(line, match, nestedProjectsLineParser)) {
+					auto childGuid = H::Guid::Parse(match[1].str());
+					auto parentGuid = H::Guid::Parse(match[2].str());
 
-						auto itChild = this->projectsMap.find(childGuid);
-						auto itParent = this->projectsMap.find(parentGuid);
+					auto itChildNode = this->mapGuidToSolutionNode.find(childGuid);
+					auto itParentNode = this->mapGuidToSolutionNode.find(parentGuid);
 
-						if (itChild != this->projectsMap.end() && itParent != this->projectsMap.end()) {
-							itParent->second->AddChild(itChild->second);
-						}
+					if (itChildNode != this->mapGuidToSolutionNode.end() &&
+						itParentNode != this->mapGuidToSolutionNode.end()
+						) {
+						auto solutionFolder = itParentNode->second.Cast<SolutionFolder>();
+						solutionFolder->LinkChildNode(itChildNode->second);
 					}
 				}
 				break;
@@ -170,7 +177,7 @@ namespace Core {
 					auto key = match[1].str();
 					auto value = match[2].str();
 
-					this->solutionProperties[key] = value;
+					this->mapSolutionPropertyKeyToValue[key] = value;
 				}
 				break;
 
@@ -193,14 +200,15 @@ namespace Core {
 					auto key = match[3].str();
 					auto value = match[4].str();
 
-					auto itProject = this->projectsMap.find(guid);
-					if (itProject != this->projectsMap.end()) {
-						itProject->second->sharedMsBuildProjectFiles.emplace_back(
+					auto itSolutionNode = this->mapGuidToSolutionNode.find(guid);
+					if (itSolutionNode != this->mapGuidToSolutionNode.end()) {
+						auto projectNode = itSolutionNode->second.Cast<ProjectNode>();
+						projectNode->sharedMsBuildProjectFiles.emplace_back(
 							relativePath,
 							guid,
 							key,
 							value,
-							itProject->second
+							itSolutionNode->second
 						);
 					}
 				}
@@ -212,7 +220,7 @@ namespace Core {
 	}
 
 	bool SolutionStructure::IsParsed() const {
-		return !this->projectsMap.empty();
+		return !this->mapGuidToSolutionNode.empty();
 	}
 
 
@@ -225,18 +233,18 @@ namespace Core {
 		result.push_back("MinimumVisualStudioVersion = 10.0.40219.1");
 
 		// Собираем корневые проекты (у которых нет родителей)
-		std::vector<std::shared_ptr<SolutionProject>> rootProjects;
-		for (const auto& [guid, projectPtr] : this->projectsMap) {
-			if (projectPtr->parentWeak.expired()) { // корневые проекты (без родителя)
-				rootProjects.push_back(projectPtr);
+		std::vector<std::ex::shared_ptr<SolutionNode>> rootSolutionNodes;
+		for (const auto& [guid, solutionNode] : this->mapGuidToSolutionNode) {
+			if (solutionNode->parentNodeWeak.expired()) { // корневые проекты (без родителя)
+				rootSolutionNodes.push_back(solutionNode);
 			}
 		}
 
 		// Сортируем корневые проекты рекурсивно
-		this->SortProjectsRecursively(rootProjects);
+		this->SortSolutionNodesRecursively(rootSolutionNodes);
 
-		for (const auto& root : rootProjects) {
-			this->SerializeProjectRecursively(root, result);
+		for (const auto& rootSolutionNode : rootSolutionNodes) {
+			this->SerializeSolutionNodeRecursively(rootSolutionNode, result);
 		}
 
 		// Global
@@ -257,16 +265,18 @@ namespace Core {
 
 		// ProjectConfigurationPlatforms
 		result.push_back("\tGlobalSection(ProjectConfigurationPlatforms) = postSolution");
-		for (const auto& [guid, projectPtr] : this->projectsMap) {
-			for (const auto& configEntry : projectPtr->configurations) {
-				result.push_back(
-					std::format(
-						"\t\t{}.{} = {}",
-						guid.ToString(),
-						configEntry.key,
-						configEntry.value
-					)
-				);
+		for (const auto& [guid, solutionNode] : this->mapGuidToSolutionNode) {
+			if (auto projectNode = solutionNode.As<ProjectNode>()) {
+				for (const auto& configEntry : projectNode->configurations) {
+					result.push_back(
+						std::format(
+							"\t\t{}.{} = {}",
+							guid.ToString(),
+							configEntry.key,
+							configEntry.value
+						)
+					);
+				}
 			}
 		}
 		result.push_back("\tEndGlobalSection");
@@ -274,13 +284,13 @@ namespace Core {
 
 		// NestedProjects
 		result.push_back(std::format("\tGlobalSection(NestedProjects) = preSolution"));
-		for (const auto& [guid, projectPtr] : this->projectsMap) {
-			if (auto parentShared = projectPtr->parentWeak.lock()) {
+		for (const auto& [guid, solutionNode] : this->mapGuidToSolutionNode) {
+			if (auto parentNode = solutionNode->parentNodeWeak.lock()) {
 				result.push_back(
 					std::format(
 						"\t\t{} = {}",
-						projectPtr->projectGuid.ToString(),
-						parentShared->projectGuid.ToString()
+						solutionNode->guid.ToString(),
+						parentNode->guid.ToString()
 					)
 				);
 			}
@@ -290,7 +300,7 @@ namespace Core {
 
 		// SolutionProperties
 		result.push_back("\tGlobalSection(SolutionProperties) = preSolution");
-		for (const auto& [key, value] : this->solutionProperties) {
+		for (const auto& [key, value] : this->mapSolutionPropertyKeyToValue) {
 			result.push_back(std::format("\t\t{} = {}", key, value));
 		}
 		result.push_back("\tEndGlobalSection");
@@ -306,17 +316,19 @@ namespace Core {
 		result.push_back(std::format("\tGlobalSection(SharedMSBuildProjectFiles) = preSolution"));
 		std::vector<std::string> sharedLines;
 
-		for (const auto& [guid, projectPtr] : this->projectsMap) {
-			for (const auto& sharedEntry : projectPtr->sharedMsBuildProjectFiles) {
-				sharedLines.push_back(
-					std::format(
-						"\t\t{}*{}*{} = {}",
-						sharedEntry.relativePath.string(),
-						sharedEntry.guid.ToString(),
-						sharedEntry.key,
-						sharedEntry.value
-					)
-				);
+		for (const auto& [guid, solutionNode] : this->mapGuidToSolutionNode) {
+			if (auto projectNode = solutionNode.As<ProjectNode>()) {
+				for (const auto& sharedEntry : projectNode->sharedMsBuildProjectFiles) {
+					sharedLines.push_back(
+						std::format(
+							"\t\t{}*{}*{} = {}",
+							sharedEntry.relativePath.string(),
+							sharedEntry.guid.ToString(),
+							sharedEntry.key,
+							sharedEntry.value
+						)
+					);
+				}
 			}
 		}
 
@@ -342,24 +354,27 @@ namespace Core {
 		return this->solutionConfigurations;
 	}
 
-	const std::map<H::Guid, std::shared_ptr<SolutionProject>>& SolutionStructure::GetProjects() const {
-		return this->projectsMap;
+	const std::map<H::Guid, std::ex::shared_ptr<SolutionNode>>& SolutionStructure::GetSolutionNodes() const {
+		return this->mapGuidToSolutionNode;
 	}
 
 
-	void SolutionStructure::AddSolutionFolder(const std::shared_ptr<SolutionProject>& solutionFolder) {
-		this->AddProjectRecursively(solutionFolder);
+	void SolutionStructure::AddProjectNode(const std::ex::shared_ptr<ProjectNode>& projectNode) {
+		this->mapGuidToSolutionNode[projectNode->guid] = projectNode;
 	}
 
-	void SolutionStructure::AddProject(const std::shared_ptr<SolutionProject>& project) {
-		this->projectsMap[project->projectGuid] = project;
+	void SolutionStructure::AddSolutionFolder(const std::ex::shared_ptr<SolutionFolder>& solutionFolder) {
+		this->AddSolutionNodeRecursively(solutionFolder);
 	}
 
-	void SolutionStructure::AddProjectRecursively(const std::shared_ptr<SolutionProject>& project) {
-		this->projectsMap[project->projectGuid] = project;
-		for (const auto& child : project->children) {
-			this->AddProjectRecursively(child);
-		}
+	void SolutionStructure::AddSolutionNodeRecursively(const std::ex::shared_ptr<SolutionNode>& solutionNode) {
+		this->mapGuidToSolutionNode[solutionNode->guid] = solutionNode;
+		
+		if (auto solutionFolder = solutionNode.As<SolutionFolder>()) {
+			for (const auto& child : solutionFolder->childNodes) {
+				this->AddSolutionNodeRecursively(child);
+			}
+		}	
 	}
 
 
@@ -383,8 +398,8 @@ namespace Core {
 	}
 
 
-	void SolutionStructure::SerializeProjectRecursively(
-		const std::shared_ptr<SolutionProject>& project,
+	void SolutionStructure::SerializeSolutionNodeRecursively(
+		const std::ex::shared_ptr<SolutionNode>& solutionNode,
 		std::vector<std::string>& outLines,
 		int indentLevel
 	) const {
@@ -393,58 +408,62 @@ namespace Core {
 		outLines.push_back(std::format(
 			"{}Project(\"{}\") = \"{}\", \"{}\", \"{}\"",
 			indent,
-			project->projectTypeGuid.ToString(),
-			project->projectName,
-			project->projectPath.string(),
-			project->projectGuid.ToString()
+			solutionNode->typeGuid.ToString(),
+			solutionNode->name,
+			solutionNode->uniquePath.string(),
+			solutionNode->guid.ToString()
 		));
 		outLines.push_back(indent + "EndProject");
 
-		if (!project->children.empty()) {
-			auto childrenCopy = project->children;
-			this->SortProjectsRecursively(childrenCopy);
+		if (auto solutionFolder = solutionNode.As<SolutionFolder>()) {
+			if (!solutionFolder->childNodes.empty()) {
+				auto childNodesCopy = solutionFolder->childNodes;
+				this->SortSolutionNodesRecursively(childNodesCopy);
 
-			for (const auto& child : childrenCopy) {
-				this->SerializeProjectRecursively(child, outLines, 0); // or indentLevel + 1
+				for (const auto& childNode : childNodesCopy) {
+					this->SerializeSolutionNodeRecursively(childNode, outLines, 0); // or indentLevel + 1
+				}
 			}
 		}
 	}
 
 
-	void SolutionStructure::SortProjectsRecursively(std::vector<std::shared_ptr<SolutionProject>>& projectsToSort) const {
-		std::sort(projectsToSort.begin(), projectsToSort.end(),
+	void SolutionStructure::SortSolutionNodesRecursively(std::vector<std::ex::shared_ptr<SolutionNode>>& solutionNodesToSort) const {
+		std::sort(solutionNodesToSort.begin(), solutionNodesToSort.end(),
 			[this](const auto& a, const auto& b) {
-				return this->CompareProjects(a, b);
+				return this->CompareSolutionNodes(a, b);
 			});
 
-		for (auto& proj : projectsToSort) {
-			if (!proj->children.empty()) {
-				this->SortProjectsRecursively(proj->children);
+		for (auto& solutionNode : solutionNodesToSort) {
+			if (auto solutionFolder = solutionNode.As<SolutionFolder>()) {
+				if (!solutionFolder->childNodes.empty()) {
+					this->SortSolutionNodesRecursively(solutionFolder->childNodes);
+				}
 			}
 		}
 	}
 
 
-	bool SolutionStructure::CompareProjects(
-		const std::shared_ptr<SolutionProject>& projectA,
-		const std::shared_ptr<SolutionProject>& projectB
+	bool SolutionStructure::CompareSolutionNodes(
+		const std::ex::shared_ptr<SolutionNode>& solutionNodeA,
+		const std::ex::shared_ptr<SolutionNode>& solutionNodeB
 	) const {
-		ProjectTypePriority prioA = this->GetProjectTypePriorityByPath(projectA);
-		ProjectTypePriority prioB = this->GetProjectTypePriorityByPath(projectB);
+		ProjectTypePriority prioA = this->GetProjectTypePriorityByPath(solutionNodeA);
+		ProjectTypePriority prioB = this->GetProjectTypePriorityByPath(solutionNodeB);
 
 		if (prioA != prioB) {
 			return static_cast<int>(prioA) < static_cast<int>(prioB);
 		}
-		return H::CaseInsensitiveComparer::IsLess(projectA->projectName, projectB->projectName);
+		return H::CaseInsensitiveComparer::IsLess(solutionNodeA->name, solutionNodeB->name);
 	}
 
 
-	SolutionStructure::ProjectTypePriority SolutionStructure::GetProjectTypePriorityByPath(std::shared_ptr<SolutionProject> project) const {
-		if (project->projectTypeGuid == SolutionStructure::SolutionFolderGuid) {
+	SolutionStructure::ProjectTypePriority SolutionStructure::GetProjectTypePriorityByPath(std::ex::shared_ptr<SolutionNode> solutionNode) const {
+		if (solutionNode->typeGuid == SolutionStructure::SolutionFolderGuid) {
 			return ProjectTypePriority::SolutionFolder;
 		}
 
-		std::string ext = project->projectPath.extension().string();
+		std::string ext = solutionNode->uniquePath.extension().string();
 
 		if (ext == ".vcxproj") {
 			return ProjectTypePriority::Vcxproj;

@@ -33,7 +33,7 @@
     <ClInclude Include="SolutionStructure.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="SolutionProject.h">
+    <ClInclude Include="SolutionNode.h">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>

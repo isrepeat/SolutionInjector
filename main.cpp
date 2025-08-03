@@ -10,14 +10,16 @@ int main(int argc, char* argv[]) {
 #ifdef _DEBUG
 	const char* debugArgs[] = {
 		"Path_to_executable",
-		"d:\\WORK\\C++\\KeyboardLayerService\\UtilityHelpersLib\\UtilityHelpersLib.sln",
-		"d:\\WORK\\C++\\KeyboardLayerService\\KeyboardLayerService.sln",
-		"-f", "3rdParty",
-		"-p", "ComAPI",
-		"-p", "ComAPI.Shared",
-		"-p", "Helpers.Raw",
-		"-p", "Helpers.Shared",
-		"-p", "Helpers.Includes",
+		"d:\\WORK\\C++\\Cpp\\UtilityHelpersLib\\UtilityHelpersLib.sln",
+		"d:\\WORK\\C++\\Cpp\\Cpp.sln",
+		//"-f", "3rdParty",
+		//"-p", "ComAPI",
+		//"-p", "ComAPI.Shared",
+		//"-p", "Helpers.Raw",
+		//"-p", "Helpers.Shared",
+		//"-p", "Helpers.Includes",
+		//"-p", "HelpersCs",
+		"-p", "HelpersCs.Visual",
 	};
 	argc = sizeof(debugArgs) / sizeof(debugArgs[0]);
 	argv = const_cast<char**>(debugArgs);
@@ -77,26 +79,27 @@ int main(int argc, char* argv[]) {
 
 	LOG_DEBUG_D("targetSlnStructure:");
 	targetSlnStructure.LogSerializedSolution();
+	targetSlnStructure.Save();
 
-	auto solutionMerger = Core::SolutionMerger{
-		sourceSlnStructure
-	};
+	//auto solutionMerger = Core::SolutionMerger{
+	//	sourceSlnStructure
+	//};
 
-	auto targetSlnStructureNew = solutionMerger.Merge(
-		targetSlnStructure,
-		projectsToInsert,
-		foldersToInsert,
-		Core::SolutionMerger::MergeFlags::None,
-		rootFolderNameOpt
-	);
-	if (!targetSlnStructureNew) {
-		LOG_ERROR_D("Merge failed");
-		return 1;
-	}
+	//auto targetSlnStructureNew = solutionMerger.Merge(
+	//	targetSlnStructure,
+	//	projectsToInsert,
+	//	foldersToInsert,
+	//	Core::SolutionMerger::MergeFlags::None,
+	//	rootFolderNameOpt
+	//);
+	//if (!targetSlnStructureNew) {
+	//	LOG_ERROR_D("Merge failed");
+	//	return 1;
+	//}
 
-	LOG_DEBUG_D("targetSlnStructure new:");
-	targetSlnStructureNew->LogSerializedSolution();
-	targetSlnStructureNew->Save();
+	//LOG_DEBUG_D("targetSlnStructure new:");
+	//targetSlnStructureNew->LogSerializedSolution();
+	//targetSlnStructureNew->Save();
 
 #ifdef _DEBUG
 	system("pause");

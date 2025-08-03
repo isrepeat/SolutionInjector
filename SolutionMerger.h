@@ -1,6 +1,8 @@
 #pragma once
+#include <Helpers/Extensions/memoryEx.h>
 #include <Helpers/Flags.h>
 #include <Helpers/Guid.h>
+
 #include "SolutionStructure.h"
 #include <unordered_set>
 #include <unordered_map>
@@ -47,28 +49,32 @@ namespace Core {
 		};
 
 
-		std::vector<std::shared_ptr<SolutionProject>> CollectProjectsAndFoldersToInsert(MergeContext& ctx);
+		std::vector<std::ex::shared_ptr<SolutionNode>> CollectSolutionNodesToInsert(MergeContext& mergeCtx);
 
 		void CollectParentsRecursive(
-			const std::shared_ptr<SolutionProject>& project,
+			const std::ex::shared_ptr<SolutionNode>& solutionNode,
 			std::unordered_set<H::Guid>& visitedGuids,
-			std::vector<std::shared_ptr<SolutionProject>>& outProjects);
+			std::vector<std::ex::shared_ptr<SolutionNode>>& outSolutionNodes);
 
-		void CollectDescendantsRecursive(
-			const std::shared_ptr<SolutionProject>& project,
+		void CollectChildrenRecursive(
+			const std::ex::shared_ptr<SolutionNode>& solutionNode,
 			std::unordered_set<H::Guid>& visitedGuids,
-			std::vector<std::shared_ptr<SolutionProject>>& outProjects);
+			std::vector<std::ex::shared_ptr<SolutionNode>>& outSolutionNodes);
 
-		std::vector<std::shared_ptr<SolutionProject>> CloneProjectsPreservingHierarchy(
-			const std::vector<std::shared_ptr<SolutionProject>>& sourceProjects);
+		std::vector<std::ex::shared_ptr<SolutionNode>> CloneSolutionNodes(
+			const std::vector<std::ex::shared_ptr<SolutionNode>>& sourceSolutionNodes);
 
 		//void RemapGuidsIfNeeded(
-		//	std::vector<std::shared_ptr<SolutionProject>>& projects,
+		//	std::vector<std::ex::shared_ptr<SolutionNode>>& projects,
 		//	MergeContext& ctx);
 
-		std::shared_ptr<SolutionProject> CreateInsertedRootFolder(
-			const std::vector<std::shared_ptr<SolutionProject>>& projects,
-			MergeContext& ctx);
+		void FilterProjectConfigurations(
+			const std::vector<std::ex::shared_ptr<SolutionNode>>& solutionNodes,
+			MergeContext& mergeCtx);
+
+		std::ex::shared_ptr<SolutionFolder> WrapSolutionNodesToRootFolder(
+			const std::vector<std::ex::shared_ptr<SolutionNode>>& solutionNodes,
+			MergeContext& mergeCtx);
 
 	private:
 		const SolutionStructure& sourceSlnStructure;

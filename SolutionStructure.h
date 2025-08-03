@@ -1,6 +1,8 @@
 #pragma once
+#include <Helpers/Extensions/memoryEx.h>
 #include <Helpers/StringComparers.h>
-#include "SolutionProject.h"
+
+#include "SolutionNode.h"
 #include <unordered_map>
 #include <iostream>
 #include <sstream>
@@ -26,11 +28,11 @@ namespace Core {
 		
 		std::filesystem::path GetSolutionPath() const;
 		const std::vector<ConfigEntry>& GetSolutionConfigurations() const;
-		const std::map<H::Guid, std::shared_ptr<SolutionProject>>& GetProjects() const;
+		const std::map<H::Guid, std::ex::shared_ptr<SolutionNode>>& GetSolutionNodes() const;
 
-		void AddSolutionFolder(const std::shared_ptr<SolutionProject>& solutionFolder);
-		void AddProject(const std::shared_ptr<SolutionProject>& project);
-		void AddProjectRecursively(const std::shared_ptr<SolutionProject>& project);
+		void AddProjectNode(const std::ex::shared_ptr<ProjectNode>& projectNode);
+		void AddSolutionFolder(const std::ex::shared_ptr<SolutionFolder>& solutionFolder);
+		void AddSolutionNodeRecursively(const std::ex::shared_ptr<SolutionNode>& solutionNode);
 
 		void Save() const;
 		void Save(const std::filesystem::path& savePath) const;
@@ -46,25 +48,25 @@ namespace Core {
 			Unknown
 		};
 
-		void SerializeProjectRecursively(
-			const std::shared_ptr<SolutionProject>& project,
+		void SerializeSolutionNodeRecursively(
+			const std::ex::shared_ptr<SolutionNode>& solutionNode,
 			std::vector<std::string>& outLines,
 			int indentLevel = 0
 		) const;
 
-		void SortProjectsRecursively(std::vector<std::shared_ptr<SolutionProject>>& projectsToSort) const;
-		bool CompareProjects(
-			const std::shared_ptr<SolutionProject>& projectA,
-			const std::shared_ptr<SolutionProject>& projectB
+		void SortSolutionNodesRecursively(std::vector<std::ex::shared_ptr<SolutionNode>>& solutionNodesToSort) const;
+		bool CompareSolutionNodes(
+			const std::ex::shared_ptr<SolutionNode>& solutionNodeA,
+			const std::ex::shared_ptr<SolutionNode>& solutionNodeB
 		) const;
 
-		ProjectTypePriority GetProjectTypePriorityByPath(std::shared_ptr<SolutionProject> project) const;
+		ProjectTypePriority GetProjectTypePriorityByPath(std::ex::shared_ptr<SolutionNode> solutionNode) const;
 
 	private:
 		H::Guid solutionGuid;
 		std::filesystem::path solutionPath;
 		std::vector<ConfigEntry> solutionConfigurations;
-		std::map<std::string, std::string, H::CaseInsensitiveComparer> solutionProperties;
-		std::map<H::Guid, std::shared_ptr<SolutionProject>> projectsMap;
+		std::map<std::string, std::string, H::CaseInsensitiveComparer> mapSolutionPropertyKeyToValue;
+		std::map<H::Guid, std::ex::shared_ptr<SolutionNode>> mapGuidToSolutionNode;
 	};
 }

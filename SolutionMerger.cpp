@@ -1,5 +1,5 @@
-#include <Helpers/Logger.h>
 #include "SolutionMerger.h"
+#include <Helpers/Logger.h>
 
 namespace Core {
 	SolutionMerger::SolutionMerger(const SolutionStructure& sourceSlnStructure)
@@ -17,7 +17,7 @@ namespace Core {
 			const_cast<SolutionStructure&>(targetSlnStructure).Parse();
 		}
 
-		MergeContext ctx{
+		MergeContext mergeCtx{
 			targetSlnStructure,
 			projectNamesToInsert,
 			folderNamesToInsert,
@@ -25,11 +25,12 @@ namespace Core {
 			rootFolderNameOpt
 		};
 
-		auto projectsToInsert = this->CollectProjectsAndFoldersToInsert(ctx);
-		auto copiedProjectsToInsert = this->CloneProjectsPreservingHierarchy(projectsToInsert);
+		auto solutionNodesToInsert = this->CollectSolutionNodesToInsert(mergeCtx);
+		auto clonedSolutionNodesToInsert = this->CloneSolutionNodes(solutionNodesToInsert);
 
 		//this->RemapGuidsIfNeeded(copiedProjectsToInsert, ctx);
-		auto rootFolderToInsert = this->CreateInsertedRootFolder(copiedProjectsToInsert, ctx);
+		this->FilterProjectConfigurations(clonedSolutionNodesToInsert, mergeCtx);
+		auto rootFolderToInsert = this->WrapSolutionNodesToRootFolder(clonedSolutionNodesToInsert, mergeCtx);
 
 		auto targetSlnStructureCopy = std::make_unique<SolutionStructure>(targetSlnStructure);
 		targetSlnStructureCopy->AddSolutionFolder(rootFolderToInsert);
@@ -38,101 +39,141 @@ namespace Core {
 	}
 
 
-	std::vector<std::shared_ptr<SolutionProject>> SolutionMerger::CollectProjectsAndFoldersToInsert(MergeContext& ctx) {
+	std::vector<std::ex::shared_ptr<SolutionNode>> SolutionMerger::CollectSolutionNodesToInsert(MergeContext& mergeCtx) {
 		std::unordered_set<H::Guid> visitedGuids;
-		std::vector<std::shared_ptr<SolutionProject>> outProjects;
+		std::vector<std::ex::shared_ptr<SolutionNode>> outSolutionNodes;
 
-		for (const auto& [guid, project] : this->sourceSlnStructure.GetProjects()) {
-			bool isProjectMatch = ctx.projectNamesToInsert.contains(project->projectName);
-			bool isFolderMatch =
-				project->projectTypeGuid == SolutionStructure::SolutionFolderGuid &&
-				ctx.folderNamesToInsert.contains(project->projectName);
-
-			if (isProjectMatch) {
-				this->CollectParentsRecursive(project, visitedGuids, outProjects);
+		for (const auto& [guid, solutionNode] : this->sourceSlnStructure.GetSolutionNodes()) {
+			if (!mergeCtx.projectNamesToInsert.contains(solutionNode->name) &&
+				!mergeCtx.folderNamesToInsert.contains(solutionNode->name)
+				) {
+				continue;
 			}
-			else if (isFolderMatch) {
-				if (ctx.mergeFlags.Has(MergeFlags::IncludeParentsForFolders)) {
-					this->CollectParentsRecursive(project, visitedGuids, outProjects);
+
+			if (solutionNode.Is<SolutionFolder>()) {
+				if (mergeCtx.mergeFlags.Has(MergeFlags::IncludeParentsForFolders)) {
+					this->CollectParentsRecursive(solutionNode, visitedGuids, outSolutionNodes);
 				}
-				this->CollectDescendantsRecursive(project, visitedGuids, outProjects);
+				this->CollectChildrenRecursive(solutionNode, visitedGuids, outSolutionNodes);
+			}
+			else {
+				this->CollectParentsRecursive(solutionNode, visitedGuids, outSolutionNodes);
 			}
 		}
 
-		return outProjects;
+		return outSolutionNodes;
 	}
 
-
+	
 	void SolutionMerger::CollectParentsRecursive(
-		const std::shared_ptr<SolutionProject>& project,
+		const std::ex::shared_ptr<SolutionNode>& solutionNode,
 		std::unordered_set<H::Guid>& visitedGuids,
-		std::vector<std::shared_ptr<SolutionProject>>& outProjects
+		std::vector<std::ex::shared_ptr<SolutionNode>>& outSolutionNodes
 	) {
-		if (!project || visitedGuids.contains(project->projectGuid)) {
+		if (!solutionNode || visitedGuids.contains(solutionNode->guid)) {
 			return;
 		}
 
-		visitedGuids.insert(project->projectGuid);
+		visitedGuids.insert(solutionNode->guid);
 
-		if (auto parent = project->parentWeak.lock()) {
-			this->CollectParentsRecursive(parent, visitedGuids, outProjects);
+		if (auto parentSolutionNode = solutionNode->parentNodeWeak.lock()) {
+			this->CollectParentsRecursive(parentSolutionNode, visitedGuids, outSolutionNodes);
 		}
 
-		outProjects.push_back(project);
+		// Вызываем после рекурсии чтобы добавление шло в порядке от родителя к ребенку.
+		outSolutionNodes.push_back(solutionNode);
 	}
 
 
-	void SolutionMerger::CollectDescendantsRecursive(
-		const std::shared_ptr<SolutionProject>& project,
+	void SolutionMerger::CollectChildrenRecursive(
+		const std::ex::shared_ptr<SolutionNode>& solutionNode,
 		std::unordered_set<H::Guid>& visitedGuids,
-		std::vector<std::shared_ptr<SolutionProject>>& outProjects
+		std::vector<std::ex::shared_ptr<SolutionNode>>& outSolutionNodes
 	) {
-		if (!project) {
+		if (!solutionNode) {
 			return;
 		}
 
-		// Мы не добавляем текущую папку, если она уже была обработана (через проход CollectParentsRecursive)
-		bool wasAlreadyVisited = !visitedGuids.insert(project->projectGuid).second;
+		// WORKAROUND: Не добавляем текущую папку, если она уже была обработана (через проход CollectParentsRecursive).
+		bool wasAlreadyVisited = !visitedGuids.insert(solutionNode->guid).second;
 		if (!wasAlreadyVisited) {
-			outProjects.push_back(project);
+			// Вызываем до рекурсии чтобы добавление шло в порядке от родителя к ребенку.
+			outSolutionNodes.push_back(solutionNode);
 		}
 
-		for (const auto& child : project->children) {
-			this->CollectDescendantsRecursive(child, visitedGuids, outProjects);
+		if (auto solutionFolder = solutionNode.As<SolutionFolder>()) {
+			for (const auto& childSolutionNode : solutionFolder->childNodes) {
+				this->CollectChildrenRecursive(childSolutionNode, visitedGuids, outSolutionNodes);
+			}
 		}
 	}
 
 
-	std::vector<std::shared_ptr<SolutionProject>> SolutionMerger::CloneProjectsPreservingHierarchy(
-		const std::vector<std::shared_ptr<SolutionProject>>& sourceProjects
+	std::vector<std::ex::shared_ptr<SolutionNode>> SolutionMerger::CloneSolutionNodes(
+		const std::vector<std::ex::shared_ptr<SolutionNode>>& sourceSolutionNodes
 	) {
-		std::vector<std::shared_ptr<SolutionProject>> result;
-		std::unordered_map<H::Guid, std::shared_ptr<SolutionProject>> sourceProjectsCopyiesMap;
+		std::vector<std::ex::shared_ptr<SolutionNode>> result;
+		std::unordered_map<H::Guid, std::ex::shared_ptr<SolutionNode>> mapGuidToClonedSolutionNode;
 
 		// Клонируем все проекты без связей
-		for (const auto& sourceProject : sourceProjects) {
-			auto sourceProjectCopy = std::make_shared<SolutionProject>(
-				sourceProject->projectTypeGuid,
-				sourceProject->projectGuid,
-				sourceProject->projectName,
-				sourceProject->projectPath.string()
-			);
-			sourceProjectCopy->configurations = sourceProject->configurations;
-			sourceProjectCopy->sharedMsBuildProjectFiles = sourceProject->sharedMsBuildProjectFiles;
-			sourceProjectsCopyiesMap[sourceProject->projectGuid] = sourceProjectCopy;
-			result.push_back(sourceProjectCopy);
+		for (const auto& sourceSolutionNode : sourceSolutionNodes) {
+			if (sourceSolutionNode.Is<SolutionFolder>()) {
+				auto sourceSolutionFolder = sourceSolutionNode.Cast<SolutionFolder>();
+
+				auto clonedSolutionFolder = std::ex::make_shared_ex<SolutionFolder>(
+					sourceSolutionNode->typeGuid,
+					sourceSolutionNode->guid,
+					sourceSolutionNode->name,
+					sourceSolutionNode->uniquePath
+				);
+
+				result.push_back(clonedSolutionFolder);
+				mapGuidToClonedSolutionNode[sourceSolutionNode->guid] = result.back();
+			}
+			else {
+				auto sourceProjectNode = sourceSolutionNode.Cast<ProjectNode>();
+				
+				auto clonedProjectNode = std::ex::make_shared_ex<ProjectNode>(
+					sourceSolutionNode->typeGuid,
+					sourceSolutionNode->guid,
+					sourceSolutionNode->name,
+					sourceSolutionNode->uniquePath
+				);
+				clonedProjectNode->configurations = sourceProjectNode->configurations;
+				clonedProjectNode->sharedMsBuildProjectFiles = sourceProjectNode->sharedMsBuildProjectFiles;
+
+				result.push_back(clonedProjectNode);
+				mapGuidToClonedSolutionNode[sourceSolutionNode->guid] = result.back();
+			}
 		}
 
-		// Восстанавливаем parent-связи между клонами
-		for (const auto& sourceProject : sourceProjects) {
-			auto sourceProjectCopy = sourceProjectsCopyiesMap[sourceProject->projectGuid];
+		// Восстанавливаем иерархию между клонированными узлами, 
+		// поскольку у клонированных узлов childNodes и parentNode пустые.
+		for (const auto& sourceSolutionNode : sourceSolutionNodes) {
+			const auto& clonedSolutionNode = mapGuidToClonedSolutionNode[sourceSolutionNode->guid];
 
-			if (auto parent = sourceProject->parentWeak.lock()) {
-				auto it = sourceProjectsCopyiesMap.find(parent->projectGuid);
-				if (it != sourceProjectsCopyiesMap.end()) {
-					it->second->AddChild(sourceProjectCopy);
-				}
+			// Получаем родителя исходного узла
+			auto sourceParentSolutionNode = sourceSolutionNode->parentNodeWeak.lock();
+			if (!sourceParentSolutionNode) {
+				continue; // корневой элемент — родителя нет
 			}
+
+			// Родителем может быть только SolutionFolder
+			if (!sourceParentSolutionNode.Is<SolutionFolder>()) {
+				continue;
+			}
+
+			// Находим соответствущий клонированный узел для sourceParentSolutionNode
+			auto clonedIt = mapGuidToClonedSolutionNode.find(sourceParentSolutionNode->guid);
+			if (clonedIt == mapGuidToClonedSolutionNode.end()) {
+				LOG_ASSERT(false, "Unexpected");
+				continue;
+			}
+
+			LOG_ASSERT(clonedIt->second.Is<SolutionFolder>());
+
+			auto clonedSolutionFolder = clonedIt->second.Cast<SolutionFolder>();
+			clonedSolutionFolder->LinkChildNode(clonedSolutionNode);
 		}
 
 		return result;
@@ -140,7 +181,7 @@ namespace Core {
 
 
 	//void SolutionMerger::RemapGuidsIfNeeded(
-	//	std::vector<std::shared_ptr<SolutionProject>>& projects,
+	//	std::vector<std::ex::shared_ptr<SolutionNode>>& projects,
 	//	MergeContext& ctx
 	//) {
 	//	std::unordered_set<H::Guid> existingGuids;
@@ -164,55 +205,46 @@ namespace Core {
 	//}
 
 
-	std::shared_ptr<SolutionProject> SolutionMerger::CreateInsertedRootFolder(
-		const std::vector<std::shared_ptr<SolutionProject>>& projects,
-		MergeContext& ctx
+	void SolutionMerger::FilterProjectConfigurations(
+		const std::vector<std::ex::shared_ptr<SolutionNode>>& solutionNodes,
+		MergeContext& mergeCtx
 	) {
-		// Создаём множество вставляемых GUID'ов
-		std::unordered_set<H::Guid> includedGuids;
-		for (const auto& project : projects) {
-			includedGuids.insert(project->projectGuid);
-		}
-
-		// Корректируем список детей
-		for (const auto& project : projects) {
-			std::vector<std::shared_ptr<SolutionProject>> filteredProjects;
-			
-			for (const auto& child : project->children) {
-				if (includedGuids.contains(child->projectGuid)) {
-					filteredProjects.push_back(child);
-				}
-			}
-
-			project->children = std::move(filteredProjects);
-		}
-
-
-		// Создаём множество допустимых ключей конфигураций
+		// Собираем допустимые конфигурации из target-решения
 		std::unordered_set<std::string> allowedConfigPlatformEntries;
-		for (const auto& slnConfig : ctx.targetSlnStructure.GetSolutionConfigurations()) {
+		for (const auto& slnConfig : mergeCtx.targetSlnStructure.GetSolutionConfigurations()) {
 			allowedConfigPlatformEntries.insert(slnConfig.configurationAndPlatform);
 		}
 
-		// Корректируем список конфигураций
-		for (const auto& project : projects) {
-			std::vector<ConfigEntry> filteredProjectConfigurations;
+		// Корректируем конфигурации у каждого проекта
+		for (const auto& solutionNode : solutionNodes) {
+			if (!solutionNode.Is<ProjectNode>()) {
+				continue;
+			}
 
-			for (const auto& projectConfig : project->configurations) {
-				if (allowedConfigPlatformEntries.contains(projectConfig.configurationAndPlatform)) {
-					filteredProjectConfigurations.push_back(projectConfig);
+			auto projectNode = solutionNode.Cast<ProjectNode>();
+			std::vector<ConfigEntry> filteredConfigs;
+
+			for (const auto& config : projectNode->configurations) {
+				if (allowedConfigPlatformEntries.contains(config.configurationAndPlatform)) {
+					filteredConfigs.push_back(config);
 				}
 			}
-			project->configurations = std::move(filteredProjectConfigurations);
+
+			projectNode->configurations = std::move(filteredConfigs);
 		}
+	}
 
 
-		auto rootFolderName = ctx.rootFolderNameOpt.has_value()
-			? ctx.rootFolderNameOpt.value()
+	std::ex::shared_ptr<SolutionFolder> SolutionMerger::WrapSolutionNodesToRootFolder(
+		const std::vector<std::ex::shared_ptr<SolutionNode>>& solutionNodes,
+		MergeContext& mergeCtx
+	) {
+		auto rootFolderName = mergeCtx.rootFolderNameOpt.has_value()
+			? mergeCtx.rootFolderNameOpt.value()
 			: this->sourceSlnStructure.GetSolutionPath().stem().string();
 
 		auto rootFolderGuid = H::Guid::NewGuid();
-		auto rootFolder = std::make_shared<SolutionProject>(
+		auto rootFolder = std::ex::make_shared_ex<SolutionFolder>(
 			SolutionStructure::SolutionFolderGuid,
 			rootFolderGuid,
 			rootFolderName,
@@ -220,29 +252,30 @@ namespace Core {
 		);
 
 		auto sourceSlnDir = std::filesystem::absolute(this->sourceSlnStructure.GetSolutionPath()).parent_path();
-		auto targetSlnDir = std::filesystem::absolute(ctx.targetSlnStructure.GetSolutionPath()).parent_path();
+		auto targetSlnDir = std::filesystem::absolute(mergeCtx.targetSlnStructure.GetSolutionPath()).parent_path();
 
-		for (const auto& project : projects) {
-			// Только те проекты, у которых нет родителя
-			if (project->parentWeak.expired()) {
-				project->parentWeak = rootFolder;
-				rootFolder->children.push_back(project);
+		for (const auto& solutionNode : solutionNodes) {
+			// Присоединяем к корню только те узлы, у которых нет родителя
+			if (!solutionNode->parentNodeWeak.lock()) {
+				rootFolder->LinkChildNode(solutionNode);
 			}
 
 			// Пересчитать путь относительно target
-			if (project->projectTypeGuid != SolutionStructure::SolutionFolderGuid) {
-				project->projectPath = std::filesystem::relative(
-					std::filesystem::absolute(sourceSlnDir / project->projectPath),
+			if (solutionNode.Is<ProjectNode>()) {
+				solutionNode->uniquePath = std::filesystem::relative(
+					std::filesystem::absolute(sourceSlnDir / solutionNode->uniquePath),
 					targetSlnDir
 				);
 			}
 
-			// Пересчитать пути shared записей
-			for (auto& shared : project->sharedMsBuildProjectFiles) {
-				shared.relativePath = std::filesystem::relative(
-					std::filesystem::absolute(sourceSlnDir / shared.relativePath),
-					targetSlnDir
-				).generic_string();
+			// Пересчитываем пути shared записей
+			if (auto projectNode = solutionNode.As<ProjectNode>()) {
+				for (auto& shared : projectNode->sharedMsBuildProjectFiles) {
+					shared.relativePath = std::filesystem::relative(
+						std::filesystem::absolute(sourceSlnDir / shared.relativePath),
+						targetSlnDir
+					).generic_string();
+				}
 			}
 		}
 
