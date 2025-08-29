@@ -8,6 +8,27 @@
     <Filter Include="Source Files\Singletons">
       <UniqueIdentifier>{8973c8e5-fdb3-409e-b98c-6635686669f4}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\Parsers">
+      <UniqueIdentifier>{0b46f499-b94d-42ef-91a8-1fd69ccb312e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Model">
+      <UniqueIdentifier>{2639cc5f-10a1-4778-8b42-945fcc63ca39}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Model\Raw">
+      <UniqueIdentifier>{a0599249-0d69-4882-bb7d-a66b4daf2ce8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Parsers\Global">
+      <UniqueIdentifier>{b44f8165-e87b-4bb2-af42-6c072edb7a3b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Parsers\Project">
+      <UniqueIdentifier>{8c349d3b-0007-4d53-8d67-6479abcde601}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Model\Global">
+      <UniqueIdentifier>{948a4b1f-7cd7-41f8-b4a2-95baab683f3a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Model\Project">
+      <UniqueIdentifier>{77e1ac24-0a6f-4b14-b67b-24f9e46d09f5}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -18,6 +39,12 @@
     </ClCompile>
     <ClCompile Include="Singletons\Constants.cpp">
       <Filter>Source Files\Singletons</Filter>
+    </ClCompile>
+    <ClCompile Include="SolutionFileAnalyzer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="DefaultSolutionStructureProvider.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="SolutionStructure.cpp">
       <Filter>Source Files</Filter>
@@ -30,10 +57,67 @@
     <ClInclude Include="Singletons\Constants.h">
       <Filter>Source Files\Singletons</Filter>
     </ClInclude>
-    <ClInclude Include="SolutionStructure.h">
+    <ClInclude Include="Parsers\ISectionParser.h">
+      <Filter>Source Files\Parsers</Filter>
+    </ClInclude>
+    <ClInclude Include="SolutionFileAnalyzer.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="SolutionNode.h">
+    <ClInclude Include="Parsers\ProjectBlocksParser.h">
+      <Filter>Source Files\Parsers</Filter>
+    </ClInclude>
+    <ClInclude Include="Parsers\GlobalBlockParser.h">
+      <Filter>Source Files\Parsers</Filter>
+    </ClInclude>
+    <ClInclude Include="Model\Raw\SolutionDocument.h">
+      <Filter>Source Files\Model\Raw</Filter>
+    </ClInclude>
+    <ClInclude Include="Model\Entries.h">
+      <Filter>Source Files\Model</Filter>
+    </ClInclude>
+    <ClInclude Include="Model\ParsedBlockBase.h">
+      <Filter>Source Files\Model</Filter>
+    </ClInclude>
+    <ClInclude Include="Model\ParsedSectionBase.h">
+      <Filter>Source Files\Model</Filter>
+    </ClInclude>
+    <ClInclude Include="Parsers\Global\ExtensibilityGlobalsSectionParser.h">
+      <Filter>Source Files\Parsers\Global</Filter>
+    </ClInclude>
+    <ClInclude Include="Parsers\Global\NestedProjectsSectionParser.h">
+      <Filter>Source Files\Parsers\Global</Filter>
+    </ClInclude>
+    <ClInclude Include="Parsers\Global\ProjectConfigurationPlatformsSectionParser.h">
+      <Filter>Source Files\Parsers\Global</Filter>
+    </ClInclude>
+    <ClInclude Include="Parsers\Global\SharedMSBuildProjectFilesSectionParser.h">
+      <Filter>Source Files\Parsers\Global</Filter>
+    </ClInclude>
+    <ClInclude Include="Parsers\Global\SolutionConfigurationPlatformsSectionParser.h">
+      <Filter>Source Files\Parsers\Global</Filter>
+    </ClInclude>
+    <ClInclude Include="Parsers\Global\SolutionPropertiesSectionParser.h">
+      <Filter>Source Files\Parsers\Global</Filter>
+    </ClInclude>
+    <ClInclude Include="Parsers\Project\SolutionItemsSectionParser.h">
+      <Filter>Source Files\Parsers\Project</Filter>
+    </ClInclude>
+    <ClInclude Include="Model\Global\GlobalModel.h">
+      <Filter>Source Files\Model\Global</Filter>
+    </ClInclude>
+    <ClInclude Include="Model\Project\ProjectModel.h">
+      <Filter>Source Files\Model\Project</Filter>
+    </ClInclude>
+    <ClInclude Include="Model\ISolutionStructureProvider.h">
+      <Filter>Source Files\Model</Filter>
+    </ClInclude>
+    <ClInclude Include="Model\ISerializable.h">
+      <Filter>Source Files\Model</Filter>
+    </ClInclude>
+    <ClInclude Include="DefaultSolutionStructureProvider.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SolutionStructure.h">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>
