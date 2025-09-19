@@ -3,9 +3,8 @@
 #include <regex>
 
 namespace Core::Singletons {
-	struct Constants : public H::_Singleton<class Constants> {
-		using _MyBase = H::_Singleton<class Constants>;
-		friend _MyBase; // to have access to private Ctor
+	struct Constants : public H::Singleton<class Constants> {
+		friend SingletonInherited_t; // to have access to private Ctor
 
 		Constants();
 	public:

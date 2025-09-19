@@ -1,70 +1,92 @@
 #pragma once
-#include <Helpers/StringComparers.h>
-#include "SolutionProject.h"
-#include <unordered_map>
-#include <iostream>
-#include <sstream>
-#include <fstream>
-#include <string>
-#include <vector>
-#include <regex>
-#include <map>
+#include <Helpers/Std/Extensions/memoryEx.h>
+#include <Helpers/Guid.h>
 
+#include "Model/Project/ProjectModel.h"
+#include "Model/Global/GlobalModel.h"
+#include "Model/ISerializable.h"
+
+#include <unordered_map>
+#include <filesystem>
+#include <vector>
 
 namespace Core {
-	class SolutionStructure {
+	class DefaultSolutionStructureProvider;
+
+	class SolutionStructure : public Model::ISerializable {
 	public:
-		static inline const H::Guid SolutionFolderGuid = H::Guid::Parse("2150E333-8FDC-42A3-9474-1A3956D46DE8");
+		struct View {
+			const std::unordered_map<H::Guid, std::ex::shared_ptr<Model::Project::ParsedProjectBlock>> mapGuidToProjectBlock;
+			const std::unordered_map<H::Guid, std::ex::shared_ptr<Model::Project::SolutionNode>> mapGuidToSolutionNode;
+			const std::unordered_map<std::string, std::ex::shared_ptr<Model::Project::SolutionNode>> mapNameToSolutionNode;
+			const std::ex::shared_ptr<Model::Global::ParsedGlobalBlock> globalBlock;
+			const std::vector<Model::Entries::ConfigEntry> solutionConfigurations;
+		};
 
-	public:
-		SolutionStructure(std::filesystem::path solutionPath);
-		
-		bool Parse();
-		bool IsParsed() const;
+		SolutionStructure(const std::unique_ptr<Model::Raw::SolutionDocument>& solutionDocument);
 
-		std::vector<std::string> SerializeToSln() const;
-		
-		std::filesystem::path GetSolutionPath() const;
-		const std::vector<ConfigEntry>& GetSolutionConfigurations() const;
-		const std::map<H::Guid, std::shared_ptr<SolutionProject>>& GetProjects() const;
+		// Запрещаем копирование / перемещение чтоб гарантровать стабильный адресс обьекта для подписок.
+		SolutionStructure(const SolutionStructure&) = delete;
+		SolutionStructure& operator=(const SolutionStructure&) = delete;
 
-		void AddSolutionFolder(const std::shared_ptr<SolutionProject>& solutionFolder);
-		void AddProject(const std::shared_ptr<SolutionProject>& project);
-		void AddProjectRecursively(const std::shared_ptr<SolutionProject>& project);
+		SolutionStructure(SolutionStructure&&) = delete;
+		SolutionStructure& operator=(SolutionStructure&&) = delete;
+
+		//
+		// ISerializable
+		//
+		std::string Serialize(
+			std::ex::optional_ref<const H::IServiceProvider> serviceProviderOpt
+		) const override;
+
+		//
+		// API
+		//
+		const Model::SolutionInfo GetSolutionInfo() const;
+		std::ex::shared_ptr<View> GetView() const;
 
 		void Save() const;
 		void Save(const std::filesystem::path& savePath) const;
 
 		void LogSerializedSolution() const;
 
-	private:
-		enum class ProjectTypePriority : int {
-			SolutionFolder,
-			Vcxproj,
-			Vcxitems,
-			Wapproj,
-			Unknown
-		};
+		void AddProjectBlock(const std::ex::shared_ptr<Model::Project::ParsedProjectBlock>& srcProjectBlock);
+		void RemoveProjectBlock(const H::Guid& projectGuid);
 
-		void SerializeProjectRecursively(
-			const std::shared_ptr<SolutionProject>& project,
-			std::vector<std::string>& outLines,
-			int indentLevel = 0
-		) const;
+		std::ex::shared_ptr<Model::Project::SolutionFolder> MakeFolder(std::string name);
 
-		void SortProjectsRecursively(std::vector<std::shared_ptr<SolutionProject>>& projectsToSort) const;
-		bool CompareProjects(
-			const std::shared_ptr<SolutionProject>& projectA,
-			const std::shared_ptr<SolutionProject>& projectB
-		) const;
-
-		ProjectTypePriority GetProjectTypePriorityByPath(std::shared_ptr<SolutionProject> project) const;
+		void AttachChild(const H::Guid& parentGuid, const H::Guid& childGuid);
+		void DettachChild(const H::Guid& parentGuid, const H::Guid& childGuid);
 
 	private:
-		H::Guid solutionGuid;
-		std::filesystem::path solutionPath;
-		std::vector<ConfigEntry> solutionConfigurations;
-		std::map<std::string, std::string, H::CaseInsensitiveComparer> solutionProperties;
-		std::map<H::Guid, std::shared_ptr<SolutionProject>> projectsMap;
+		void AddProjectBlockRecursive(const std::ex::shared_ptr<Model::Project::ParsedProjectBlock>& srcProjectBlock);
+		void RemoveProjectBlockRecursive(const H::Guid& projectGuid);
+
+		void AddProjectNodeEntriesToGlobalBlock(const std::ex::shared_ptr<Model::Project::ProjectNode>& srcProjectNode);
+		void RemoveProjectNodeEntriesFromGlobalBlock(const std::ex::shared_ptr<Model::Project::ProjectNode>& projectNode);
+
+		void WriteNestedProjectsEntry(Model::Global::ParsedNestedProjectsSection::Entry entry);
+		void WriteSharedMSBuildProjectFilesEntry(Model::Entries::SharedMsBuildProjectFileEntry entry);
+		void WriteProjectConfigurationPlatformsEntry(Model::Global::ParsedProjectConfigurationPlatformsSection::Entry entry);
+
+		void DeleteNestedProjectsEntries(
+			std::function<bool(const Model::Global::ParsedNestedProjectsSection::Entry&)> predicate
+		);
+		void DeleteSharedMSBuildProjectFilesEntries(
+			std::function<bool(const Model::Entries::SharedMsBuildProjectFileEntry&)> predicate
+		);
+		void DeleteProjectConfigurationPlatformsEntries(
+			std::function<bool(const Model::Global::ParsedProjectConfigurationPlatformsSection::Entry&)> predicate
+		);
+
+		std::filesystem::path RebuildPathRelativeToCurrentSolution(const std::filesystem::path& absolutePath);
+
+		void UpdateView();
+
+	private:
+		std::ex::shared_ptr<View> view;
+		std::ex::shared_ptr<Model::Global::ParsedGlobalBlock> globalBlock;
+		std::ex::shared_ptr<DefaultSolutionStructureProvider> solutionStructureProvider;
+		std::unordered_map<H::Guid, std::ex::shared_ptr<Model::Project::ParsedProjectBlock>> mapGuidToProjectBlock;
 	};
 }

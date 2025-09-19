@@ -75,7 +75,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <LanguageStandard>stdcpp20</LanguageStandard>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -90,7 +90,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <LanguageStandard>stdcpp20</LanguageStandard>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -105,7 +105,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <LanguageStandard>stdcpp20</LanguageStandard>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -120,7 +120,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <LanguageStandard>stdcpp20</LanguageStandard>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -130,16 +130,36 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="DefaultSolutionStructureProvider.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="Model\Global\GlobalModel.cpp" />
     <ClCompile Include="Singletons\Constants.cpp" />
+    <ClCompile Include="SolutionFileAnalyzer.cpp" />
     <ClCompile Include="SolutionStructure.cpp" />
-    <ClCompile Include="SolutionMerger.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="SolutionProject.h" />
+    <ClInclude Include="DefaultSolutionStructureProvider.h" />
+    <ClInclude Include="Model\Entries.h" />
+    <ClInclude Include="Model\Global\GlobalModel.h" />
+    <ClInclude Include="Model\ISerializable.h" />
+    <ClInclude Include="Model\ISolutionStructureProvider.h" />
+    <ClInclude Include="Model\ParsedBlockBase.h" />
+    <ClInclude Include="Model\ParsedSectionBase.h" />
+    <ClInclude Include="Model\Project\ProjectModel.h" />
+    <ClInclude Include="Model\Raw\SolutionDocument.h" />
+    <ClInclude Include="Parsers\GlobalBlockParser.h" />
+    <ClInclude Include="Parsers\Global\ExtensibilityGlobalsSectionParser.h" />
+    <ClInclude Include="Parsers\Global\NestedProjectsSectionParser.h" />
+    <ClInclude Include="Parsers\Global\ProjectConfigurationPlatformsSectionParser.h" />
+    <ClInclude Include="Parsers\Global\SharedMSBuildProjectFilesSectionParser.h" />
+    <ClInclude Include="Parsers\Global\SolutionConfigurationPlatformsSectionParser.h" />
+    <ClInclude Include="Parsers\Global\SolutionPropertiesSectionParser.h" />
+    <ClInclude Include="Parsers\ISectionParser.h" />
+    <ClInclude Include="Parsers\ProjectBlocksParser.h" />
+    <ClInclude Include="Parsers\Project\SolutionItemsSectionParser.h" />
+    <ClInclude Include="SolutionFileAnalyzer.h" />
     <ClInclude Include="Singletons\Constants.h" />
     <ClInclude Include="SolutionStructure.h" />
-    <ClInclude Include="SolutionMerger.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\Helpers\Helpers.Raw\Helpers.Raw.vcxproj">
