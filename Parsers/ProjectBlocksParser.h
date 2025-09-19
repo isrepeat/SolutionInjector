@@ -13,8 +13,6 @@ namespace Core {
 	namespace Parsers {
 		class ProjectBlocksParser {
 		public:
-			static inline const H::Guid SolutionFolderGuid = H::Guid::Parse("2150E333-8FDC-42A3-9474-1A3956D46DE8");
-
 			ProjectBlocksParser(std::weak_ptr<Model::ISolutionStructureProvider> solutionStructureProviderWeak)
 				: solutionStructureProviderWeak{ solutionStructureProviderWeak } {
 				
@@ -50,7 +48,7 @@ namespace Core {
 						auto guid = H::Guid::Parse(rxMatchResult->capturedGroups[4]);
 
 						auto parsedProjectBlock = std::ex::make_shared_ex<Model::Project::ParsedProjectBlock>();
-						if (typeGuid == this->SolutionFolderGuid) {
+						if (typeGuid == Model::Project::SolutionFolder::SolutionFolderTypeGuid) {
 							parsedProjectBlock->solutionNode = std::ex::make_shared_ex<Model::Project::SolutionFolder>(
 								typeGuid,
 								guid,

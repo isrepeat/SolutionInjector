@@ -24,20 +24,20 @@ namespace Core {
 					std::make_unique<Global::ProjectConfigurationPlatformsSectionParser>());
 
 				this->sectionParserMap.emplace(
-					Model::Global::ParsedSharedMSBuildProjectFilesSection::SectionName,
-					std::make_unique<Global::SharedMSBuildProjectFilesSectionParser>());
-
-				this->sectionParserMap.emplace(
-					Model::Global::ParsedExtensibilityGlobalsSection::SectionName,
-					std::make_unique<Global::ExtensibilityGlobalsSectionParser>());
-
-				this->sectionParserMap.emplace(
 					Model::Global::ParsedSolutionPropertiesSection::SectionName,
 					std::make_unique<Global::SolutionPropertiesSectionParser>());
 
 				this->sectionParserMap.emplace(
 					Model::Global::ParsedNestedProjectsSection::SectionName,
 					std::make_unique<Global::NestedProjectsSectionParser>());
+
+				this->sectionParserMap.emplace(
+					Model::Global::ParsedExtensibilityGlobalsSection::SectionName,
+					std::make_unique<Global::ExtensibilityGlobalsSectionParser>());
+				
+				this->sectionParserMap.emplace(
+					Model::Global::ParsedSharedMSBuildProjectFilesSection::SectionName,
+					std::make_unique<Global::SharedMSBuildProjectFilesSectionParser>());
 			}
 
 			std::ex::shared_ptr<Model::Global::ParsedGlobalBlock> Parse(

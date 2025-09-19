@@ -124,7 +124,7 @@ namespace Core {
 		//
 		{
 			auto itParsedSection = globalBlock->sectionMap.find(
-				Model::Global::ParsedNestedProjectsSection::SectionName
+				std::string{ Model::Global::ParsedNestedProjectsSection::SectionName }
 			);
 			if (itParsedSection != globalBlock->sectionMap.end()) {
 				auto parsedNestedProjectsSection = itParsedSection->second
@@ -152,7 +152,7 @@ namespace Core {
 		//
 		{
 			auto itParsedSection = globalBlock->sectionMap.find(
-				Core::Model::Global::ParsedProjectConfigurationPlatformsSection::SectionName
+				std::string{ Model::Global::ParsedProjectConfigurationPlatformsSection::SectionName }
 			);
 			if (itParsedSection != globalBlock->sectionMap.end()) {
 				auto parsedProjectConfigurationPlatformsSection = itParsedSection->second
@@ -169,7 +169,7 @@ namespace Core {
 		//
 		{
 			auto itParsedSection = globalBlock->sectionMap.find(
-				Core::Model::Global::ParsedSharedMSBuildProjectFilesSection::SectionName
+				std::string{ Model::Global::ParsedSharedMSBuildProjectFilesSection::SectionName }
 			);
 			if (itParsedSection != globalBlock->sectionMap.end()) {
 				auto parsedSharedMSBuildProjectFilesSection = itParsedSection->second
@@ -192,7 +192,7 @@ namespace Core {
 		}
 
 		auto itParsedSection = globalBlock->sectionMap.find(
-			Model::Global::ParsedExtensibilityGlobalsSection::SectionName
+			std::string{ Model::Global::ParsedExtensibilityGlobalsSection::SectionName }
 		);
 		if (itParsedSection != globalBlock->sectionMap.end()) {
 			auto parsedExtensibilityGlobalsSection = itParsedSection->second

@@ -4,8 +4,6 @@
 
 namespace Core {
 	std::unique_ptr<SolutionStructure> SolutionFileAnalyzer::BuildSolutionStructure(std::filesystem::path solutionPath) {
-		auto solutionDocument = SolutionFileAnalyzer::BuildSolutionDocument(solutionPath);
-
 		auto resultSolutionStructure = std::make_unique<SolutionStructure>(
 			SolutionFileAnalyzer::BuildSolutionDocument(solutionPath)
 		);
@@ -62,7 +60,7 @@ namespace Core {
 				auto sectionName = rxMatchResult->capturedGroups[1];
 				auto sectionRole = rxMatchResult->capturedGroups[2];
 
-				currentSection = &currentBlock->sectionMap[sectionName];
+				currentSection = &currentBlock->sectionMap[std::string{ sectionName }];
 				currentSection->startLine = lineIdx;
 				currentSection->name = sectionName;
 				currentSection->role = sectionRole;
@@ -109,7 +107,7 @@ namespace Core {
 				auto sectionName = rxMatchResult->capturedGroups[1];
 				auto sectionRole = rxMatchResult->capturedGroups[2];
 
-				currentSection = &currentBlock->sectionMap[sectionName];
+				currentSection = &currentBlock->sectionMap[std::string{ sectionName }];
 				currentSection->startLine = lineIdx;
 				currentSection->name = sectionName;
 				currentSection->role = sectionRole;
@@ -144,77 +142,4 @@ namespace Core {
 
 		return solutionDocument;
 	}
-
-
-	//void SolutionFileAnalyzer::HandleNestedProjectsSection(const std::shared_ptr<Model::SolutionStructure>& solutionStructure) {
-	//	const auto& mapGuidToSolutionNode = solutionStructure->GetView().mapGuidToSolutionNode;
-
-	//	auto itParsedSection = solutionStructure->GetView().globalBlock->sectionMap.find(
-	//		Model::Global::ParsedNestedProjectsSection::SectionName
-	//	);
-	//	if (itParsedSection != solutionStructure->GetView().globalBlock->sectionMap.end()) {
-	//		auto parsedNestedProjectsSection = itParsedSection->second
-	//			.Cast<Model::Global::ParsedNestedProjectsSection>();
-
-	//		for (const auto& entry : parsedNestedProjectsSection->entries) {
-	//			auto itChild = mapGuidToSolutionNode.find(entry.childGuid);
-	//			auto itParent = mapGuidToSolutionNode.find(entry.parentGuid);
-
-	//			if (itChild != mapGuidToSolutionNode.end() &&
-	//				itParent != mapGuidToSolutionNode.end()) {
-	//				const auto& childNode = itChild->second;
-	//				const auto& parentNode = itParent->second;
-	//				LOG_ASSERT(parentNode.Is<Model::Project::SolutionFolder>());
-
-	//				auto solutionFolder = parentNode.Cast<Model::Project::SolutionFolder>();
-	//				solutionFolder->LinkChildNode(childNode);
-	//			}
-	//		}
-	//	}
-	//}
-
-
-	////void SolutionFileAnalyzer::HandleSharedMSBuildProjectFilesSection(const Model::SolutionStructure& solutionStructure) {
-	////	auto solutionStructureView = Model::SolutionStructureView(solutionStructure);
-	////	auto mapGuidToSolutionNode = solutionStructureView.BuildMapGuidToSolutionNode();
-
-	////	auto itParsedSection = solutionStructure.globalBlock->sectionMap.find(
-	////		Parsers::GlobalBlock::SharedMSBuildProjectFilesSectionParser::SectionName
-	////	);
-	////	if (itParsedSection != solutionStructure.globalBlock->sectionMap.end()) {
-	////		auto parsedSharedMSBuildProjectFilesSection = itParsedSection->second
-	////			.Cast<Parsers::GlobalBlock::ParsedSharedMSBuildProjectFilesSection>();
-
-	////		for (auto& entry : parsedSharedMSBuildProjectFilesSection->entries) {
-	////			auto itSolutionNode = mapGuidToSolutionNode.find(entry.guid);
-	////			if (itSolutionNode != mapGuidToSolutionNode.end()) {
-	////				entry.solutionNode = itSolutionNode->second;
-	////			}
-	////		}
-	////	}
-	////}
-
-
-	//void SolutionFileAnalyzer::HandleProjectConfigurationPlatformSection(const std::shared_ptr<Model::SolutionStructure>& solutionStructure) {
-	//	const auto& mapGuidToSolutionNode = solutionStructure->GetView().mapGuidToSolutionNode;
-
-	//	auto itParsedSection = solutionStructure->GetView().globalBlock->sectionMap.find(
-	//		Model::Global::ParsedProjectConfigurationPlatformsSection::SectionName
-	//	);
-	//	if (itParsedSection != solutionStructure->GetView().globalBlock->sectionMap.end()) {
-	//		auto parsedProjectConfigurationPlatformsSection = itParsedSection->second
-	//			.Cast<Model::Global::ParsedProjectConfigurationPlatformsSection>();
-
-	//		for (const auto& entry : parsedProjectConfigurationPlatformsSection->entries) {
-	//			auto itSolutionNode = mapGuidToSolutionNode.find(entry.guid);
-	//			if (itSolutionNode != mapGuidToSolutionNode.end()) {
-	//				const auto& solutionNode = itSolutionNode->second;
-	//				LOG_ASSERT(solutionNode.Is<Model::Project::ProjectNode>());
-
-	//				auto projectNode = solutionNode.Cast<Model::Project::ProjectNode>();
-	//				projectNode->configurations.push_back(entry.configEntry);
-	//			}
-	//		}
-	//	}
-	//}
 }

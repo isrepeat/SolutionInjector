@@ -11,7 +11,7 @@
 namespace Core {
 	namespace Model {
 		struct ParsedBlockBase : ISerializable {
-			std::unordered_map<std::string_view, std::ex::shared_ptr<ParsedSectionBase>> sectionMap;
+			std::unordered_map<std::string, std::ex::shared_ptr<ParsedSectionBase>> sectionMap;
 
 			virtual ~ParsedBlockBase() {}
 		};

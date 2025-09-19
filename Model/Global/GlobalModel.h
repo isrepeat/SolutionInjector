@@ -11,21 +11,33 @@ namespace Core {
 	namespace Model {
 		namespace Global {
 			//
+			// ░ ProjectBlocksOrderInfo
+			// ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░ 
+			//
+			class ProjectBlocksOrderInfo {
+			public:
+				ProjectBlocksOrderInfo(const std::vector<H::Guid>& orderedProjectGuids);
+
+				std::size_t GetOrderPriorityForProjectGuid(const H::Guid& guid) const;
+
+			private:
+				static std::unordered_map<H::Guid, std::size_t> CreateMapGuidToOrderPriority(
+					const std::vector<H::Guid>& orderedProjectGuids
+				);
+
+			private:
+				const std::unordered_map<H::Guid, std::size_t> mapGuidToOrderPriority;
+			};
+
+
+			//
 			// ░ Parsed global block
 			// ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░ 
 			//
 			struct ParsedGlobalBlock : ParsedBlockBase {
-				std::string Serialize() const override {
-					std::string out;
-					out += "Global\n";
-
-					for (const auto& [key, section] : this->sectionMap) {
-						out += section->Serialize();
-					}
-
-					out += "EndGlobal\n";
-					return out;
-				}
+				std::string Serialize(
+					std::ex::optional_ref<const H::IServiceProvider> serviceProviderOpt
+				) const override;
 			};
 
 
@@ -43,27 +55,12 @@ namespace Core {
 
 				std::vector<Model::Entries::ConfigEntry> entries;
 
-				ParsedSolutionConfigurationPlatformsSection(const Model::Raw::Section& section)
-					: DefaultCloneableImplInherited_t{ section.name, section.role } {
-				}
+				ParsedSolutionConfigurationPlatformsSection(const Model::Raw::Section& section);
 
 			private:
-				std::vector<std::string> SerializeBody() const override {
-					std::vector<std::string> rows;
-
-					for (const auto& configEntry : this->entries) {
-						rows.push_back(std::format(
-							"{}|{} = {}|{}",
-							configEntry.declaredConfguration,
-							configEntry.declaredPlatform,
-							configEntry.assignedConfguration,
-							configEntry.assignedPlatform
-						));
-					}
-
-					std::sort(rows.begin(), rows.end());
-					return rows;
-				}
+				std::vector<std::string> SerializeBody(
+					std::ex::optional_ref<const H::IServiceProvider> /*serviceProviderOpt*/
+				) const override;
 			};
 
 
@@ -76,51 +73,23 @@ namespace Core {
 
 				static constexpr std::string_view SectionName = "ProjectConfigurationPlatforms";
 
+				// Добавляем операторы сравнения для упрощения сортировки, разделяем ее на 2 прохода.
 				struct Entry {
 					H::Guid guid;
 					Model::Entries::ConfigEntry configEntry;
+
+					bool operator<(const Entry& other) const;
+					bool operator==(const Entry& other) const;
 				};
 
 				std::vector<Entry> entries;
 
-				ParsedProjectConfigurationPlatformsSection(const Model::Raw::Section& section)
-					: DefaultCloneableImplInherited_t{ section.name, section.role } {
-				}
+				ParsedProjectConfigurationPlatformsSection(const Model::Raw::Section& section);
 
 			private:
-				std::vector<std::string> SerializeBody() const override {
-					std::vector<std::string> rows;
-
-					for (const auto& entry : this->entries) {
-						const std::string indexSuffix = entry.configEntry.index
-							? std::format(".{}", *entry.configEntry.index)
-							: "";
-
-						const std::string key = std::format(
-							"{}|{}.{}{}",
-							entry.configEntry.declaredConfguration,
-							entry.configEntry.declaredPlatform,
-							entry.configEntry.action,
-							indexSuffix
-						);
-
-						const std::string value = std::format(
-							"{}|{}",
-							entry.configEntry.assignedConfguration,
-							entry.configEntry.assignedPlatform
-						);
-
-						rows.push_back(std::format(
-							"{}.{} = {}",
-							entry.guid,
-							key,
-							value
-						));
-					}
-
-					std::sort(rows.begin(), rows.end());
-					return rows;
-				}
+				std::vector<std::string> SerializeBody(
+					std::ex::optional_ref<const H::IServiceProvider> serviceProviderOpt
+				) const override;
 			};
 
 
@@ -135,32 +104,19 @@ namespace Core {
 
 				std::vector<Model::Entries::KeyValuePair> entries;
 
-				ParsedSolutionPropertiesSection(const Model::Raw::Section& section)
-					: DefaultCloneableImplInherited_t{ section.name, section.role } {
-				}
+				ParsedSolutionPropertiesSection(const Model::Raw::Section& section);
 
 			private:
-				std::vector<std::string> SerializeBody() const override {
-					std::vector<std::string> rows;
-
-					for (const auto& entry : this->entries) {
-						rows.push_back(std::format(
-							"{} = {}",
-							entry.key,
-							entry.value
-						));
-					}
-
-					std::sort(rows.begin(), rows.end());
-					return rows;
-				}
+				std::vector<std::string> SerializeBody(
+					std::ex::optional_ref<const H::IServiceProvider> serviceProviderOpt
+				) const override;
 			};
 
 
 			// 
 			// ░ NestedProjects
 			//
-			struct ParsedNestedProjectsSection : 
+			struct ParsedNestedProjectsSection :
 				ParsedGlobalSectionBase::DefaultCloneableImpl_t<ParsedNestedProjectsSection> {
 				using DefaultCloneableImplInherited_t::DefaultCloneableImplInherited_t;
 
@@ -173,25 +129,12 @@ namespace Core {
 
 				std::vector<Entry> entries;
 
-				ParsedNestedProjectsSection(const Model::Raw::Section& section)
-					: DefaultCloneableImplInherited_t{ section.name, section.role } {
-				}
+				ParsedNestedProjectsSection(const Model::Raw::Section& section);
 
 			private:
-				std::vector<std::string> SerializeBody() const override {
-					std::vector<std::string> rows;
-
-					for (const auto& entry : this->entries) {
-						rows.push_back(std::format(
-							"{} = {}",
-							entry.childGuid,
-							entry.parentGuid
-						));
-					}
-
-					std::sort(rows.begin(), rows.end());
-					return rows;
-				}
+				std::vector<std::string> SerializeBody(
+					std::ex::optional_ref<const H::IServiceProvider> serviceProviderOpt
+				) const override;
 			};
 
 
@@ -206,29 +149,19 @@ namespace Core {
 
 				H::Guid solutionGuid;
 
-				ParsedExtensibilityGlobalsSection(const Model::Raw::Section& section)
-					: DefaultCloneableImplInherited_t{ section.name, section.role } {
-				}
+				ParsedExtensibilityGlobalsSection(const Model::Raw::Section& section);
 
 			private:
-				std::vector<std::string> SerializeBody() const override {
-					std::vector<std::string> rows;
-
-					rows.push_back(std::format(
-						"SolutionGuid = {}",
-						this->solutionGuid
-					));
-
-					std::sort(rows.begin(), rows.end());
-					return rows;
-				}
+				std::vector<std::string> SerializeBody(
+					std::ex::optional_ref<const H::IServiceProvider> /*serviceProviderOpt*/
+				) const override;
 			};
 
 
 			// 
 			// ░ SharedMSBuildProjectFiles
 			//
-			struct ParsedSharedMSBuildProjectFilesSection : 
+			struct ParsedSharedMSBuildProjectFilesSection :
 				ParsedGlobalSectionBase::DefaultCloneableImpl_t<ParsedSharedMSBuildProjectFilesSection> {
 				using DefaultCloneableImplInherited_t::DefaultCloneableImplInherited_t;
 
@@ -236,27 +169,12 @@ namespace Core {
 
 				std::vector<Model::Entries::SharedMsBuildProjectFileEntry> entries;
 
-				ParsedSharedMSBuildProjectFilesSection(const Model::Raw::Section& section)
-					: DefaultCloneableImplInherited_t{ section.name, section.role } {
-				}
+				ParsedSharedMSBuildProjectFilesSection(const Model::Raw::Section& section);
 
 			private:
-				std::vector<std::string> SerializeBody() const override {
-					std::vector<std::string> rows;
-
-					for (const auto& entry : this->entries) {
-						rows.push_back(std::format(
-							"{}*{}*{} = {}",
-							entry.relativePath,
-							entry.guid,
-							entry.key,
-							entry.value
-						));
-					}
-
-					std::sort(rows.begin(), rows.end());
-					return rows;
-				}
+				std::vector<std::string> SerializeBody(
+					std::ex::optional_ref<const H::IServiceProvider> serviceProviderOpt
+				) const override;
 			};
 		}
 	}

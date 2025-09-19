@@ -1,4 +1,5 @@
 #pragma once
+#include <Helpers/Std/Extensions/rangesEx.h>
 #include <Helpers/Logger.h>
 #include <Helpers/Regex.h>
 

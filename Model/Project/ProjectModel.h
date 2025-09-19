@@ -124,6 +124,8 @@ namespace Core {
 			struct SolutionFolder : SolutionNode::ICloneableInherited_t::DefaultCloneableImpl<SolutionFolder> {
 				using DefaultCloneableImplInherited_t::DefaultCloneableImplInherited_t;
 
+				static inline const H::Guid SolutionFolderTypeGuid = H::Guid::Parse("2150E333-8FDC-42A3-9474-1A3956D46DE8");
+
 				std::vector<std::ex::shared_ptr<SolutionNode>> GetChildren() const {
 					if (auto solutionStructureProvider = this->solutionStructureProviderWeak.lock()) {
 						auto projectEntriesReader = solutionStructureProvider.Cast<IProjectEntriesReader>();
@@ -165,7 +167,9 @@ namespace Core {
 			struct ParsedProjectBlock : ParsedBlockBase {
 				std::ex::shared_ptr<SolutionNode> solutionNode;
 
-				std::string Serialize() const override {
+				std::string Serialize(
+					std::ex::optional_ref<const H::IServiceProvider> /*serviceProviderOpt*/
+				) const override {
 					std::string out;
 					out += std::format(
 						"Project(\"{}\") = \"{}\", \"{}\", \"{}\"\n",
@@ -176,7 +180,7 @@ namespace Core {
 					);
 
 					for (const auto& [key, section] : this->sectionMap) {
-						out += section->Serialize();
+						out += section->Serialize(std::nullopt);
 					}
 
 					out += "EndProject\n";
@@ -204,7 +208,9 @@ namespace Core {
 				}
 
 			private:
-				std::vector<std::string> SerializeBody() const override {
+				std::vector<std::string> SerializeBody(
+					std::ex::optional_ref<const H::IServiceProvider> /*serviceProviderOpt*/
+				) const override {
 					std::vector<std::string> rows;
 
 					for (const auto& entry : this->entries) {

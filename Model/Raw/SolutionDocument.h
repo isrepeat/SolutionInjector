@@ -28,7 +28,7 @@ namespace Core {
 
 
 			struct Block : NodeScope {
-				std::unordered_map<std::string_view, Section> sectionMap;
+				std::unordered_map<std::string, Section> sectionMap;
 			};
 
 

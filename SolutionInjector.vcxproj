@@ -132,10 +132,10 @@
   <ItemGroup>
     <ClCompile Include="DefaultSolutionStructureProvider.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="Model\Global\GlobalModel.cpp" />
     <ClCompile Include="Singletons\Constants.cpp" />
     <ClCompile Include="SolutionFileAnalyzer.cpp" />
     <ClCompile Include="SolutionStructure.cpp" />
-    <ClCompile Include="SolutionMerger.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="DefaultSolutionStructureProvider.h" />
@@ -160,7 +160,6 @@
     <ClInclude Include="SolutionFileAnalyzer.h" />
     <ClInclude Include="Singletons\Constants.h" />
     <ClInclude Include="SolutionStructure.h" />
-    <ClInclude Include="SolutionMerger.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\Helpers\Helpers.Raw\Helpers.Raw.vcxproj">

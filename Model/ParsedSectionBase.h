@@ -1,5 +1,6 @@
 #pragma once
 #include <Helpers/Std/Extensions/memoryEx.h>
+#include <Helpers/Meta/Concepts.h>
 #include <Helpers/ICloneable.h>
 #include <Helpers/Logger.h>
 
@@ -22,8 +23,10 @@ namespace Core {
 
 			virtual ~ParsedSectionBase() {}
 
-			std::string Serialize() const override {
-				auto bodyRows = this->SerializeBody();
+			std::string Serialize(
+				std::ex::optional_ref<const H::IServiceProvider> serviceProviderOpt
+			) const override {
+				auto bodyRows = this->SerializeBody(serviceProviderOpt);
 
 				std::string out;
 				out += std::format(
@@ -49,8 +52,11 @@ namespace Core {
 				, sectionRole{ sectionRole } {
 			}
 
-			virtual std::vector<std::string> SerializeBody() const = 0;
-			virtual std::string_view GetSectionScopeName() const = 0;
+			virtual std::vector<std::string> SerializeBody(
+				std::ex::optional_ref<const H::IServiceProvider> serviceProviderOpt
+			) const = 0;
+
+			virtual std::string GetSectionScopeName() const = 0;
 		};
 
 
@@ -63,7 +69,7 @@ namespace Core {
 		protected:
 			using ParsedSectionBase::ParsedSectionBase;
 
-			std::string_view GetSectionScopeName() const override {
+			std::string GetSectionScopeName() const override {
 				return "Project";
 			}
 		};
@@ -78,19 +84,21 @@ namespace Core {
 		protected:
 			using ParsedSectionBase::ParsedSectionBase;
 
-			std::string_view GetSectionScopeName() const override {
+			std::string GetSectionScopeName() const override {
 				return "Global";
 			}
 		};
 
 
 		namespace details {
-			template <typename ParsedSectionImplT>
-				requires std::derived_from<ParsedSectionImplT, ParsedSectionBase>&&
-				requires { { ParsedSectionImplT::SectionName } -> std::convertible_to<std::string_view>; }
-			static std::ex::shared_ptr<ParsedSectionImplT> MakeSharedParsedSection(const Raw::Section& section) {
-				LOG_ASSERT(section.name == ParsedSectionImplT::SectionName);
-				return std::ex::make_shared_ex<ParsedSectionImplT>(section);
+			template <typename TParsedSectionImpl>
+			__requires requires { requires
+				std::derived_from<TParsedSectionImpl, ParsedSectionBase>&&
+				requires { { TParsedSectionImpl::SectionName } -> std::convertible_to<std::string_view>; };
+			}
+			std::ex::shared_ptr<TParsedSectionImpl> MakeSharedParsedSection(const Raw::Section& section) {
+				LOG_ASSERT(section.name == TParsedSectionImpl::SectionName);
+				return std::ex::make_shared_ex<TParsedSectionImpl>(section);
 			}
 		}
 	}

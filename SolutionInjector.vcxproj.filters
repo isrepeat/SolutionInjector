@@ -34,9 +34,6 @@
     <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="SolutionMerger.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Singletons\Constants.cpp">
       <Filter>Source Files\Singletons</Filter>
     </ClCompile>
@@ -49,11 +46,11 @@
     <ClCompile Include="SolutionStructure.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Model\Global\GlobalModel.cpp">
+      <Filter>Source Files\Model\Global</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="SolutionMerger.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="Singletons\Constants.h">
       <Filter>Source Files\Singletons</Filter>
     </ClInclude>

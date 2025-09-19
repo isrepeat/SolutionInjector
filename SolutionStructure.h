@@ -18,6 +18,7 @@ namespace Core {
 		struct View {
 			const std::unordered_map<H::Guid, std::ex::shared_ptr<Model::Project::ParsedProjectBlock>> mapGuidToProjectBlock;
 			const std::unordered_map<H::Guid, std::ex::shared_ptr<Model::Project::SolutionNode>> mapGuidToSolutionNode;
+			const std::unordered_map<std::string, std::ex::shared_ptr<Model::Project::SolutionNode>> mapNameToSolutionNode;
 			const std::ex::shared_ptr<Model::Global::ParsedGlobalBlock> globalBlock;
 			const std::vector<Model::Entries::ConfigEntry> solutionConfigurations;
 		};
@@ -34,11 +35,14 @@ namespace Core {
 		//
 		// ISerializable
 		//
-		std::string Serialize() const override;
+		std::string Serialize(
+			std::ex::optional_ref<const H::IServiceProvider> serviceProviderOpt
+		) const override;
 
 		//
 		// API
 		//
+		const Model::SolutionInfo GetSolutionInfo() const;
 		std::ex::shared_ptr<View> GetView() const;
 
 		void Save() const;
@@ -48,6 +52,8 @@ namespace Core {
 
 		void AddProjectBlock(const std::ex::shared_ptr<Model::Project::ParsedProjectBlock>& srcProjectBlock);
 		void RemoveProjectBlock(const H::Guid& projectGuid);
+
+		std::ex::shared_ptr<Model::Project::SolutionFolder> MakeFolder(std::string name);
 
 		void AttachChild(const H::Guid& parentGuid, const H::Guid& childGuid);
 		void DettachChild(const H::Guid& parentGuid, const H::Guid& childGuid);
