@@ -1,23 +1,23 @@
+#include <Helpers/Std/Extensions/rangesEx.h>
 #include <Helpers/CommandLineParser.h>
 #include <Helpers/Logger.h>
 
 #include "SolutionFileAnalyzer.h"
 #include "SolutionStructure.h"
-#include "SolutionMerger.h"
 
 #include <unordered_set>
 #include <iostream>
 #include <string>
 
-struct CmdOptions {
+struct CmdArgs {
 	using CommandLineParser_t = H::CommandLineParserA;
 	using string_t = typename CommandLineParser_t::string_t;
 
 	std::filesystem::path sourceSlnPath;
 	std::filesystem::path targetSlnPath;
 	bool normalize = false;
-	std::vector<string_t> folders;
-	std::vector<string_t> projects;
+	std::unordered_set<string_t> folders;
+	std::unordered_set<string_t> projects;
 	std::optional<string_t> rootName;
 
 	static std::vector<typename CommandLineParser_t::FlagDesc> Description() {
@@ -30,7 +30,7 @@ struct CmdOptions {
 		};
 	}
 
-	static void MapParsedResults(const CommandLineParser_t& cmdLineParser, CmdOptions& out) {
+	static void MapParsedResults(const CommandLineParser_t& cmdLineParser, CmdArgs& out) {
 		const auto& positional = cmdLineParser.GetPositional();
 
 		if (positional.size() > 0) {
@@ -41,8 +41,13 @@ struct CmdOptions {
 		}
 
 		out.normalize = cmdLineParser.Has("--normalize");
-		out.folders = cmdLineParser.GetAll("-f");
-		out.projects = cmdLineParser.GetAll("-p");
+		
+		const auto& folders = cmdLineParser.GetAll("-f");
+		out.folders = std::unordered_set<string_t>{ folders.begin(), folders.end() };
+
+		const auto& projects = cmdLineParser.GetAll("-p");
+		out.projects = std::unordered_set<string_t>{ projects.begin(), projects.end() };
+
 		out.rootName = cmdLineParser.Get("--rootName");
 	}
 
@@ -62,6 +67,13 @@ struct CmdOptions {
 };
 
 
+void Merge(
+	const CmdArgs& cmdArgs,
+	const std::unique_ptr<Core::SolutionStructure>& sourceSlnStructure,
+	std::unique_ptr<Core::SolutionStructure>& targetSlnStructure
+);
+
+
 int main(int argc, char* argv[]) {
 #ifdef _DEBUG
 	const char* debugArgs[] = {
@@ -69,14 +81,17 @@ int main(int argc, char* argv[]) {
 		"d:\\WORK\\C++\\Cpp\\UtilityHelpersLib\\UtilityHelpersLib.sln",
 		"d:\\WORK\\C++\\Cpp\\Cpp.sln",
 		"--normalize",
+		//"--rootName", "UtilityHelpersLib [submodule]",
 		//"-f", "3rdParty",
+		//"-f", "Helpers",
 		//"-p", "ComAPI",
 		//"-p", "ComAPI.Shared",
 		//"-p", "Helpers.Raw",
 		//"-p", "Helpers.Shared",
 		//"-p", "Helpers.Includes",
+		//"-f", "HelpersCs",
 		//"-p", "HelpersCs",
-		"-p", "HelpersCs.Visual",
+		//"-p", "HelpersCs.Visual",
 	};
 	argc = sizeof(debugArgs) / sizeof(debugArgs[0]);
 	argv = const_cast<char**>(debugArgs);
@@ -101,13 +116,13 @@ int main(int argc, char* argv[]) {
 	}
 
 	try {
-		auto cmdOptions = H::CommandLineParserA::ParseTo<CmdOptions>(argc, argv);
+		const auto cmdArgs = H::CommandLineParserA::ParseTo<CmdArgs>(argc, argv);
 		
-		auto sourceSlnStructure = Core::SolutionFileAnalyzer::BuildSolutionStructure(cmdOptions.sourceSlnPath);
-		LOG_DEBUG_D("sourceSlnStructure:");
-		sourceSlnStructure->LogSerializedSolution();
+		auto sourceSlnStructure = Core::SolutionFileAnalyzer::BuildSolutionStructure(cmdArgs.sourceSlnPath);
+		//LOG_DEBUG_D("sourceSlnStructure:");
+		//sourceSlnStructure->LogSerializedSolution();
 
-		auto targetSlnStructure = Core::SolutionFileAnalyzer::BuildSolutionStructure(cmdOptions.targetSlnPath);
+		auto targetSlnStructure = Core::SolutionFileAnalyzer::BuildSolutionStructure(cmdArgs.targetSlnPath);
 		LOG_DEBUG_D("targetSlnStructure:");
 		targetSlnStructure->LogSerializedSolution();
 
@@ -115,10 +130,10 @@ int main(int argc, char* argv[]) {
 		// ░ Normalization
 		// ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░ 
 		//
-		if (cmdOptions.normalize) {
+		if (cmdArgs.normalize) {
 			// Просто пересохраняем target.sln, чтобы при сериализации произошла нормализация строк.
 			targetSlnStructure->Save();
-			LOG_DEBUG_D("Normalized (re-saved) target: {}", cmdOptions.targetSlnPath);
+			LOG_DEBUG_D("Normalized (re-saved) target: {}", cmdArgs.targetSlnPath);
 			return 0;
 		}
 
@@ -126,26 +141,11 @@ int main(int argc, char* argv[]) {
 		// ░ Merging
 		// ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░ 
 		//
-
-		//auto solutionMerger = Core::SolutionMerger{
-		//	sourceSlnStructure
-		//};
-
-		//auto targetSlnStructureNew = solutionMerger.Merge(
-		//	targetSlnStructure,
-		//	projectsToInsert,
-		//	foldersToInsert,
-		//	Core::SolutionMerger::MergeFlags::None,
-		//	rootFolderNameOpt
-		//);
-		//if (!targetSlnStructureNew) {
-		//	LOG_ERROR_D("Merge failed");
-		//	return 1;
-		//}
-
-		//LOG_DEBUG_D("targetSlnStructure new:");
-		//targetSlnStructureNew->LogSerializedSolution();
-		//targetSlnStructureNew->Save();
+		Merge(
+			cmdArgs,
+			sourceSlnStructure,
+			targetSlnStructure
+		);
 
 		return 0;
 	}
@@ -158,4 +158,101 @@ int main(int argc, char* argv[]) {
 	system("pause");
 #endif
 	return 0;
+}
+
+
+void Merge(
+	const CmdArgs& cmdArgs,
+	const std::unique_ptr<Core::SolutionStructure>& sourceSlnStructure,
+	std::unique_ptr<Core::SolutionStructure>& targetSlnStructure
+) {
+	using namespace Core;
+
+	if (cmdArgs.projects.empty() && cmdArgs.folders.empty()) {
+		LOG_DEBUG_D("No -p / -f filters provided. Nothing to merge.");
+		return;
+	}
+
+	// Собираем выбранные SolutionFolder's.
+	auto selectedSolutionFolders =
+		sourceSlnStructure->GetView()->mapGuidToSolutionNode
+		| std::ranges::views::values
+		| std::ranges::views::filter(
+			[&](const std::ex::shared_ptr<Model::Project::SolutionNode>& solutionNode) {
+				if (solutionNode.Is<Model::Project::SolutionFolder>() &&
+					cmdArgs.folders.contains(solutionNode->name)
+					) {
+					return true;
+				}
+				return false;
+			})
+		| std::ex::ranges::views::to<std::vector<std::ex::shared_ptr<Model::Project::SolutionNode>>>();
+
+	// Собираем множество дочерних проектов из selectedFolders, чтоб далее исключить их 
+	// из cmdArgs.projects, т.к. эти проекты будут вставлены все равно рекурсивно.
+	auto projectNamesUnderSelectedFolders =
+		selectedSolutionFolders
+		| std::ex::ranges::views::flatten_tree(
+			[](const std::ex::shared_ptr<Model::Project::SolutionNode>& solutionNode) {
+				if (auto solutionFolder = solutionNode.As<Model::Project::SolutionFolder>()) {
+					return solutionFolder->GetChildren();
+				}
+				return std::vector<std::ex::shared_ptr<Model::Project::SolutionNode>>{};
+			})
+		| std::ranges::views::filter(
+			[](const std::ex::shared_ptr<Model::Project::SolutionNode>& solutionNode) {
+				return solutionNode.Is<Model::Project::ProjectNode>();
+			})
+		| std::ranges::views::transform(
+			[](const std::ex::shared_ptr<Model::Project::SolutionNode>& solutionNode) {
+				return solutionNode->name;
+			})
+		| std::ex::ranges::views::to<std::unordered_set<std::string>>();
+
+	// Собираем выбранные ProjectNode's, исключаем те что уже находятся в projectNamesUnderSelectedFolders.
+	auto selectedProjectNodes =
+		sourceSlnStructure->GetView()->mapGuidToSolutionNode
+		| std::ranges::views::values
+		| std::ranges::views::filter(
+			[&](const std::ex::shared_ptr<Model::Project::SolutionNode>& solutionNode) {
+				if (solutionNode.Is<Model::Project::ProjectNode>() &&
+					cmdArgs.projects.contains(solutionNode->name) &&
+					!projectNamesUnderSelectedFolders.contains(solutionNode->name)
+					) {
+					return true;
+				}
+				return false;
+			})
+		| std::ex::ranges::views::to<std::vector<std::ex::shared_ptr<Model::Project::SolutionNode>>>();
+
+	auto srcSolutionNodesToInsert =
+		selectedSolutionFolders
+		| std::ex::ranges::views::concat(selectedProjectNodes)
+		| std::ex::ranges::views::to<std::vector<std::ex::shared_ptr<Model::Project::SolutionNode>>>();
+
+	for (const auto& srcSolutionNode : srcSolutionNodesToInsert) {
+		targetSlnStructure->AddProjectBlock(srcSolutionNode->GetProjectBlock());
+	}
+
+	const auto targetSolutionInfo = targetSlnStructure->GetSolutionInfo();
+
+	auto rootFolderName = cmdArgs.rootName
+		? *cmdArgs.rootName
+		: std::format("[Inserted from {}.sln]", targetSolutionInfo.solutionFile.stem().string());
+
+	auto rootFolder = targetSlnStructure->MakeFolder(rootFolderName);
+
+	// TODO: вообще после вставки могут поменяться guids у вставленных solutionNodes,
+	// поэтому нужно вытащить вставленные узлы уже из targetSlnStructure view;
+
+	// TODO: добавь возможность в SolutionStructure удалять solution configuration
+	for (const auto& srcSolutionNode : srcSolutionNodesToInsert) {
+		targetSlnStructure->AttachChild(rootFolder->guid, srcSolutionNode->guid);
+	}
+
+	LOG_DEBUG_D("targetSlnStructure (new):");
+	targetSlnStructure->LogSerializedSolution();
+	targetSlnStructure->Save();
+
+	LOG_DEBUG_D("Merging finished. Target saved.");
 }
