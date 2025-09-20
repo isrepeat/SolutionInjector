@@ -165,7 +165,7 @@ namespace Core {
 				// объявлены в верхней части ".sln".
 				std::vector<std::string> rows;
 
-				// Сортируем в естественном порядке.
+				// Сортируем в естественном порядке (это нужно чтобы равные guid отсортировались по configEntry).
 				auto sortedEntries = this->entries;
 				std::sort(sortedEntries.begin(), sortedEntries.end());
 
