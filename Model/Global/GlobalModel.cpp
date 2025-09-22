@@ -350,6 +350,8 @@ namespace Core {
 								return a.guid < b.guid;
 							}
 							else if (a.relativePath != b.relativePath) {
+								// NOTE: VS сортирует видимо не по пути, а использует MSBuild оценку, т.е.
+								// сортировка происходит в порядке импортов .projitems (проверь).
 								return a.relativePath < b.relativePath; // по пути
 							}
 							return a.key < b.key; // по ключу (например, SharedItemsImports)
