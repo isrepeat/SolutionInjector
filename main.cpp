@@ -11,6 +11,10 @@
 #include <iostream>
 #include <string>
 
+//
+// ░ CmdArgs
+// ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░ 
+//
 struct CmdArgs {
 	using CommandLineParser_t = H::CommandLineParserA;
 	using string_t = typename CommandLineParser_t::string_t;
@@ -38,10 +42,10 @@ struct CmdArgs {
 		const auto& positional = cmdLineParser.GetPositional();
 
 		if (positional.size() > 0) {
-			out.sourceSlnPath = positional[0];
+			out.sourceSlnPath = std::filesystem::canonical(positional[0]);
 		}
 		if (positional.size() > 1) {
-			out.targetSlnPath = positional[1];
+			out.targetSlnPath = std::filesystem::canonical(positional[1]);
 		}
 
 		out.normalize = cmdLineParser.Has("--normalize");
@@ -76,6 +80,10 @@ struct CmdArgs {
 };
 
 
+//
+// ░ TransformSolutionPipeline
+// ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░ 
+//
 class TransformSolutionPipeline : public H::Pipeline<TransformSolutionPipeline> {
 public:
 	TransformSolutionPipeline(
@@ -215,13 +223,18 @@ private:
 };
 
 
-
+//
+// ░ Main
+// ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░ 
+//
 int main(int argc, char* argv[]) {
 #ifdef _DEBUG
 	const char* debugArgs[] = {
 		"Path_to_executable",
 		"d:\\WORK\\C++\\Cpp\\UtilityHelpersLib\\UtilityHelpersLib.sln",
 		"d:\\WORK\\C++\\Cpp\\Cpp.sln",
+		//"..\\..\\UtilityHelpersLib.sln",
+		//"..\\..\\..\\Cpp.sln",
 		//"--normalize",
 		"-rmCfg", "Debug|ARM",
 		"-rmCfg", "Debug|ARM64",
