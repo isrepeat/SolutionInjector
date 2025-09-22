@@ -58,6 +58,10 @@ namespace Core {
 		void AttachChild(const H::Guid& parentGuid, const H::Guid& childGuid);
 		void DettachChild(const H::Guid& parentGuid, const H::Guid& childGuid);
 
+		void RemoveSolutionConfigurationsByDeclaredKeys(
+			const std::unordered_set<std::string>& solutionConfigDeclaredKeys
+		);
+
 	private:
 		void AddProjectBlockRecursive(const std::ex::shared_ptr<Model::Project::ParsedProjectBlock>& srcProjectBlock);
 		void RemoveProjectBlockRecursive(const H::Guid& projectGuid);

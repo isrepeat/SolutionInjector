@@ -159,7 +159,7 @@ namespace Core {
 		// 6) Провайдер сервисов: кладём порядок проектов
 		H::DefaultServiceProvider serviceProvider;
 		serviceProvider.AddService<Model::Global::ProjectBlocksOrderInfo>(
-			std::make_shared<Model::Global::ProjectBlocksOrderInfo>(orderedProjectGuidsVector)
+			std::make_unique<Model::Global::ProjectBlocksOrderInfo>(orderedProjectGuidsVector)
 		);
 
 		// 7) Global-блок, который внутри отсортирует ProjectConfigurationPlatforms
@@ -297,6 +297,57 @@ namespace Core {
 	}
 
 
+    void SolutionStructure::RemoveSolutionConfigurationsByDeclaredKeys(
+		const std::unordered_set<std::string>& solutionConfigDeclaredKeys
+	) {
+		if (solutionConfigDeclaredKeys.empty()) {
+			return;
+		}
+
+		{
+			auto itParsedSection = this->globalBlock->sectionMap.find(
+				std::string{ Model::Global::ParsedSolutionConfigurationPlatformsSection::SectionName }
+			);
+			if (itParsedSection != this->globalBlock->sectionMap.end()) {
+				auto parsedSlnCfg = itParsedSection->second
+					.Cast<Model::Global::ParsedSolutionConfigurationPlatformsSection>();
+
+				std::erase_if(
+					parsedSlnCfg->entries,
+					[&](const Model::Entries::ConfigEntry& configEntry) {
+						if (solutionConfigDeclaredKeys.contains(configEntry.declaredConfigurationAndPlatform)) {
+							return true;
+						}
+						return false;
+					}
+				);
+			}
+		}
+
+		{
+			auto itParsedSection = this->globalBlock->sectionMap.find(
+				std::string{ Model::Global::ParsedProjectConfigurationPlatformsSection::SectionName }
+			);
+			if (itParsedSection != this->globalBlock->sectionMap.end()) {
+				auto parsedPrjCfg = itParsedSection->second
+					.Cast<Model::Global::ParsedProjectConfigurationPlatformsSection>();
+
+				std::erase_if(
+					parsedPrjCfg->entries,
+					[&](const Model::Global::ParsedProjectConfigurationPlatformsSection::Entry& entry) {
+						if (solutionConfigDeclaredKeys.contains(entry.configEntry.declaredConfigurationAndPlatform)) {
+							return true;
+						}
+						return false;
+					}
+				);
+			}
+		}
+
+		this->UpdateView();
+    }
+
+
 	//
 	// Internal logic
 	//
@@ -310,14 +361,16 @@ namespace Core {
 
 		auto clonedProjectBlock = std::ex::make_shared_ex<Model::Project::ParsedProjectBlock>();
 
+		auto newRelativePath = srcProjectBlock->solutionNode.Is<Model::Project::ProjectNode>()
+			? this->RebuildPathRelativeToCurrentSolution(srcSolutionDir / srcProjectBlock->solutionNode->relativePath)
+			: srcProjectBlock->solutionNode->relativePath; // relativePath для SolutionFolder это ее имя (оставляем тем же).
+
 		clonedProjectBlock->solutionNode = srcProjectBlock->solutionNode->Clone(
-			this->RebuildPathRelativeToCurrentSolution(srcSolutionDir / srcProjectBlock->solutionNode->relativePath),
+			newRelativePath,
 			this->solutionStructureProvider.As<Model::ISolutionStructureProvider>()
 		);
 
-		for (auto& kvp : srcProjectBlock->sectionMap) {
-			const auto& key = kvp.first;
-			const auto& srcParsedSection = kvp.second;
+		for (auto& [key, srcParsedSection] : srcProjectBlock->sectionMap) {
 			clonedProjectBlock->sectionMap[key] = srcParsedSection->Clone();
 		}
 

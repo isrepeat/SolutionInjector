@@ -165,7 +165,7 @@ namespace Core {
 				// объявлены в верхней части ".sln".
 				std::vector<std::string> rows;
 
-				// Сортируем в естественном порядке.
+				// Сортируем в естественном порядке (это нужно чтобы равные guid отсортировались по configEntry).
 				auto sortedEntries = this->entries;
 				std::sort(sortedEntries.begin(), sortedEntries.end());
 
@@ -350,6 +350,8 @@ namespace Core {
 								return a.guid < b.guid;
 							}
 							else if (a.relativePath != b.relativePath) {
+								// NOTE: VS сортирует видимо не по пути, а использует MSBuild оценку, т.е.
+								// сортировка происходит в порядке импортов .projitems (проверь).
 								return a.relativePath < b.relativePath; // по пути
 							}
 							return a.key < b.key; // по ключу (например, SharedItemsImports)
