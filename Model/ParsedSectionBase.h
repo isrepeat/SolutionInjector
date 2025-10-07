@@ -92,11 +92,10 @@ namespace Core {
 
 		namespace details {
 			template <typename TParsedSectionImpl>
-			__requires requires { requires
+			__requires_expr(
 				std::derived_from<TParsedSectionImpl, ParsedSectionBase>&&
-				requires { { TParsedSectionImpl::SectionName } -> std::convertible_to<std::string_view>; };
-			}
-			std::ex::shared_ptr<TParsedSectionImpl> MakeSharedParsedSection(const Raw::Section& section) {
+				requires { { TParsedSectionImpl::SectionName } -> std::convertible_to<std::string_view>; }
+			) std::ex::shared_ptr<TParsedSectionImpl> MakeSharedParsedSection(const Raw::Section& section) {
 				LOG_ASSERT(section.name == TParsedSectionImpl::SectionName);
 				return std::ex::make_shared_ex<TParsedSectionImpl>(section);
 			}
