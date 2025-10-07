@@ -451,13 +451,14 @@ namespace Core {
 		const auto srcSolutionInfo = srcProjectNode->GetSolutionInfo();
 		const auto srcSolutionDir = srcSolutionInfo.solutionFile.parent_path();
 
-		const bool isCsproj = srcProjectNode->relativePath.extension().string() == ".csproj";
+		const bool isVcxitems = srcProjectNode->relativePath.extension().string() == ".vcxitems";
 		const bool isShproj = srcProjectNode->relativePath.extension().string() == ".shproj";
+		const bool isCsproj = srcProjectNode->relativePath.extension().string() == ".csproj";
 
 		// ProjectConfigurationPlatforms
 		{
-			if (isShproj) {
-				// Shared C# (.shproj): ничего не добавляем в ProjectConfigurationPlatforms
+			if (isVcxitems || isShproj) {
+				// .vcxitems и.shproj не должны иметь записи в ProjectConfigurationPlatforms.
 			}
 			else {
 				// Берём solution-configs напрямую из globalBlock, т.к. view еще не готоов.

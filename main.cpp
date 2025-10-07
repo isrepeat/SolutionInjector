@@ -42,6 +42,9 @@ struct CmdArgs {
 		const auto& positional = cmdLineParser.GetPositional();
 
 		if (positional.size() > 0) {
+			// NOTE: std::filesystem::canonical() информацию о текущем рабочем каталоге,
+			//       которая наследуется процессом из caller'а. Т.е. если программа запускается
+			//       через PowerShell / Cmd то они могут менять рабочий каталог.
 			out.sourceSlnPath = std::filesystem::canonical(positional[0]);
 		}
 		if (positional.size() > 1) {
@@ -231,24 +234,24 @@ int main(int argc, char* argv[]) {
 #ifdef _DEBUG
 	const char* debugArgs[] = {
 		"Path_to_executable",
-		"d:\\WORK\\C++\\Cpp\\UtilityHelpersLib\\UtilityHelpersLib.sln",
-		"d:\\WORK\\C++\\Cpp\\Cpp.sln",
-		//"..\\..\\UtilityHelpersLib.sln",
-		//"..\\..\\..\\Cpp.sln",
+		//"d:\\WORK\\C++\\Cpp\\UtilityHelpersLib\\UtilityHelpersLib.sln",
+		//"d:\\WORK\\C++\\Cpp\\Cpp.sln",
+		"..\\..\\UtilityHelpersLib.sln",
+		"..\\..\\..\\TabsManagerExtension.sln",
 		//"--normalize",
-		"-rmCfg", "Debug|ARM",
-		"-rmCfg", "Debug|ARM64",
-		"-rmCfg", "Release|ARM",
-		"-rmCfg", "Release|ARM64",
+		//"-rmCfg", "Debug|ARM",
+		//"-rmCfg", "Debug|ARM64",
+		//"-rmCfg", "Release|ARM",
+		//"-rmCfg", "Release|ARM64",
 		"--rootName", "UtilityHelpersLib [submodule]",
 		//"-f", "3rdParty",
 		//"-f", "Helpers",
 		//"-p", "ComAPI",
-		//"-p", "ComAPI.Shared",
+		"-p", "ComAPI.Shared",
 		//"-p", "Helpers.Raw",
 		//"-p", "Helpers.Shared",
 		//"-p", "Helpers.Includes",
-		"-f", "HelpersCs",
+		//"-f", "HelpersCs",
 		//"-p", "HelpersCs",
 		//"-p", "HelpersCs.Visual",
 	};
