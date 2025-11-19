@@ -1,0 +1,44 @@
+<Project>
+  <!-- ::::::: Импорт ближайшего родительского Directory.Build.targets ::::::: -->
+  <PropertyGroup>
+    <_ParentDirectoryBuildTargets>$([MSBuild]::GetPathOfFileAbove('Directory.Build.targets','$(MSBuildThisFileDirectory)..\'))</_ParentDirectoryBuildTargets>
+    <_ParentDirectoryBuildTargetsNorm Condition="'$(_ParentDirectoryBuildTargets)'!=''">$([System.IO.Path]::GetFullPath('$(_ParentDirectoryBuildTargets)'))</_ParentDirectoryBuildTargetsNorm>
+    <_CurrentDirectoryBuildTargetsNorm>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileFullPath)'))</_CurrentDirectoryBuildTargetsNorm>
+  </PropertyGroup>
+
+  <Import Project="$(_ParentDirectoryBuildTargets)"
+          Condition="'$(_ParentDirectoryBuildTargetsNorm)'!='' and
+                     '$(_ParentDirectoryBuildTargetsNorm)'!='$(_CurrentDirectoryBuildTargetsNorm)'" />
+
+  <PropertyGroup>
+    <_NearestDirectoryBuildTargetsForSolution Condition="'$(SolutionDir)'!=''">$([MSBuild]::GetPathOfFileAbove('Directory.Build.targets','$(SolutionDir)'))</_NearestDirectoryBuildTargetsForSolution>
+    <_NearestDirectoryBuildTargetsForSolutionNorm Condition="'$(_NearestDirectoryBuildTargetsForSolution)'!=''">$([System.IO.Path]::GetFullPath('$(_NearestDirectoryBuildTargetsForSolution)'))</_NearestDirectoryBuildTargetsForSolutionNorm>
+    <_IsLocal>False</_IsLocal>
+    <_IsLocal Condition="'$(_NearestDirectoryBuildTargetsForSolutionNorm)'!='' and
+                         '$(_NearestDirectoryBuildTargetsForSolutionNorm)'=='$(_CurrentDirectoryBuildTargetsNorm)'">True</_IsLocal>
+  </PropertyGroup>
+  <!-- ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: -->
+  
+  <Target Name="CopyExeAfterBuild"
+          AfterTargets="Build"
+          Condition="'$(_IsLocal)'=='True' and
+                     '$(Configuration)' == 'Release'">
+    <PropertyGroup>
+      <NewLine>%0D%0A</NewLine>
+      <UtilitiesBinDir>$(SolutionDir)Utilities\bin</UtilitiesBinDir>
+    </PropertyGroup>
+    
+    <MakeDir Directories="$(UtilitiesBinDir)" />
+    
+    <ItemGroup>
+      <BuiltExe Include="$(OutDir)$(TargetName).exe" />
+    </ItemGroup>
+    
+    <Message Importance="high" Text="$(NewLine)" />
+    <Message Importance="high" Text="Copying @(BuiltExe) to $(UtilitiesBinDir)" />
+    
+    <Copy SourceFiles="@(BuiltExe)"
+          DestinationFolder="$(UtilitiesBinDir)"
+          SkipUnchangedFiles="true" />
+  </Target>
+</Project>
