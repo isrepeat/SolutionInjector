@@ -25,7 +25,7 @@
                      '$(Configuration)' == 'Release'">
     <PropertyGroup>
       <NewLine>%0D%0A</NewLine>
-      <UtilitiesBinDir>$(SolutionDir)Utilities\bin</UtilitiesBinDir>
+      <UtilitiesBinDir>$(SolutionDir)\bin</UtilitiesBinDir>
     </PropertyGroup>
     
     <MakeDir Directories="$(UtilitiesBinDir)" />

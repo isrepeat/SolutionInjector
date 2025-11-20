@@ -302,7 +302,6 @@ int main(int argc, char* argv[]) {
 		}
 
 		return 0;
-
 	}
 	catch (const std::exception& ex) {
 		LOG_ERROR_D("exception = {}", ex.what());
