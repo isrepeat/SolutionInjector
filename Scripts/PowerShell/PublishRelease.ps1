@@ -1,7 +1,8 @@
 param(
     [string]$Tag,
     [string]$Repository = 'isrepeat/SolutionInjector',
-    [string]$Target = 'HEAD',
+    [string]$Target = 'refs/heads/Last',
+    [string]$StableTag = 'Last',
     [string]$ExePath,
     [string]$RuntimeDirectory,
     [string]$Title,
@@ -20,9 +21,25 @@ function InvokeChecked([string]$Command, [string[]]$Arguments) {
 }
 
 try {
-    if (-not $Tag) { $Tag = Read-Host 'Release tag (for example v1.0.0)' }
+    # 1. Выбираем следующую patch-версию; учитываем черновики и уже занятые теги.
+    if ($Repository -notmatch '^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$') { throw 'Expected GitHub owner/repository.' }
+    if (-not $Tag) {
+        $releaseJson = InvokeChecked 'gh' @('release', 'list', '--repo', $Repository, '--limit', '1000', '--json', 'tagName')
+        $releaseTags = @($releaseJson | ConvertFrom-Json | ForEach-Object { $_.tagName })
+        $remoteTags = @(InvokeChecked 'git' @('ls-remote', '--tags', "https://github.com/$Repository.git") |
+            ForEach-Object { if ($_ -match 'refs/tags/(v\d+\.\d+\.\d+)$') { $Matches[1] } })
+        $versions = @(@($releaseTags) + @($remoteTags) |
+            Where-Object { $_ -match '^v\d+\.\d+\.\d+$' } |
+            ForEach-Object { [version]$_.Substring(1) } | Sort-Object -Descending)
+        $Tag = if ($versions.Count) {
+            'v{0}.{1}.{2}' -f $versions[0].Major, $versions[0].Minor, ($versions[0].Build + 1)
+        } else {
+            'v1.0.0'
+        }
+    }
     # Ограничиваем имя также для безопасного использования в пути архива.
     if ($Tag -notmatch '^[A-Za-z0-9][A-Za-z0-9._-]*$') { throw 'Invalid release tag.' }
+    if ($StableTag -notmatch '^[A-Za-z0-9][A-Za-z0-9._-]*$' -or $StableTag -eq $Tag) { throw 'Invalid or conflicting stable tag.' }
     if ($Repository -notmatch '^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$') { throw 'Expected GitHub owner/repository.' }
     $commit = (InvokeChecked 'git' @('-C', $repositoryRoot, 'rev-parse', '--verify', "$Target^{commit}")).Trim()
     if (-not $ExePath) { $ExePath = Join-Path $repositoryRoot 'bin/SolutionInjector.exe' }
@@ -77,6 +94,8 @@ try {
     Write-Host "Archive SHA-256: $archiveHash"
     Write-Host "EXE SHA-256: $exeHash"
     Write-Host "Target commit: $commit"
+    Write-Host "Release tag: $Tag"
+    Write-Host "Stable tag: $StableTag"
     if ($PrepareOnly) { return }
 
     if (-not $Title) { $Title = "SolutionInjector $Tag (Windows x64)" }
@@ -95,6 +114,20 @@ try {
     if ($Draft) { $arguments += '--draft' }
     # Публикация не коммитит и не отправляет локальные изменения.
     InvokeChecked 'gh' $arguments | Out-Host
+
+    # 2. После публикации перемещаем стабильный тег; ветка Last остаётся отдельной ссылкой.
+    # Черновик и подготовка архива не меняют стабильный тег.
+    if (-not $Draft) {
+        $stableRef = @(InvokeChecked 'git' @('ls-remote', '--tags', "https://github.com/$Repository.git", "refs/tags/$StableTag"))
+        if ($stableRef.Count) {
+            InvokeChecked 'gh' @('api', '--method', 'PATCH', "repos/$Repository/git/refs/tags/$StableTag",
+                '-f', "sha=$commit", '-F', 'force=true') | Out-Null
+        } else {
+            InvokeChecked 'gh' @('api', '--method', 'POST', "repos/$Repository/git/refs",
+                '-f', "ref=refs/tags/$StableTag", '-f', "sha=$commit") | Out-Null
+        }
+        Write-Host "Stable tag $StableTag now points to $commit"
+    }
 }
 catch {
     Write-Error $_ -ErrorAction Continue

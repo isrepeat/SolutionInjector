@@ -22,7 +22,8 @@
   <Target Name="CopyExeAfterBuild"
           AfterTargets="Build"
           Condition="'$(_IsLocal)'=='True' and
-                     '$(Configuration)' == 'Release'">
+                     '$(Configuration)' == 'Release' and
+                     '$(ConfigurationType)' == 'Application'">
     <PropertyGroup>
       <NewLine>%0D%0A</NewLine>
       <UtilitiesBinDir>$(SolutionDir)\bin</UtilitiesBinDir>
@@ -31,7 +32,7 @@
     <MakeDir Directories="$(UtilitiesBinDir)" />
     
     <ItemGroup>
-      <BuiltExe Include="$(OutDir)$(TargetName).exe" />
+      <BuiltExe Include="$(TargetPath)" />
     </ItemGroup>
     
     <Message Importance="high" Text="$(NewLine)" />
