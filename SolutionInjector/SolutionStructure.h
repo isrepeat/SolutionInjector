@@ -88,6 +88,7 @@ namespace Core {
 		void UpdateView();
 
 	private:
+		std::string solutionHeader;
 		std::ex::shared_ptr<View> view;
 		std::ex::shared_ptr<Model::Global::ParsedGlobalBlock> globalBlock;
 		std::ex::shared_ptr<DefaultSolutionStructureProvider> solutionStructureProvider;

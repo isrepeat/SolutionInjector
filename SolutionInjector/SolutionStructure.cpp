@@ -1,4 +1,5 @@
 #include "SolutionStructure.h"
+
 #include <Helpers/Collection/Algorithms.h>
 #include <Helpers/Std/Extensions/fstreamEx.h>
 #include <Helpers/Std/Extensions/rangesEx.h>
@@ -74,6 +75,17 @@ namespace Core {
 	SolutionStructure::SolutionStructure(
 		const std::unique_ptr<Model::Raw::SolutionDocument>& solutionDocument
 	) {
+		for (const auto& line : solutionDocument->streamLineViewer.GetAllLines()) {
+			const auto first = line.find_first_not_of(" \t\r");
+			if (first != std::string_view::npos &&
+				(line.substr(first).starts_with("Project(") || line.substr(first) == "Global" || line.substr(first) == "Global\r")) {
+				break;
+			}
+			this->solutionHeader += std::string(line) + "\n";
+		}
+		if (this->solutionHeader.starts_with("\xEF\xBB\xBF")) {
+			this->solutionHeader.erase(0, 3);
+		}
 		this->globalBlock = Parsers::GlobalBlockParser{}.Parse(*solutionDocument);
 
 		this->solutionStructureProvider = std::ex::make_shared_ex<DefaultSolutionStructureProvider>(
@@ -81,13 +93,15 @@ namespace Core {
 			this->globalBlock
 		);
 
-		auto solutionStructureProviderInterface = 
+		auto solutionStructureProviderInterface =
 			this->solutionStructureProvider.As<Model::ISolutionStructureProvider>();
 
 		auto parsedProjectBlocks = Parsers::ProjectBlocksParser{ solutionStructureProviderInterface }.Parse(*solutionDocument);
 
 		for (auto& parsedProjectBlock : parsedProjectBlocks) {
-			this->mapGuidToProjectBlock[parsedProjectBlock->solutionNode->guid] = parsedProjectBlock;
+			if (!this->mapGuidToProjectBlock.emplace(parsedProjectBlock->solutionNode->guid, parsedProjectBlock).second) {
+				throw std::runtime_error("Duplicate project GUID in solution");
+			}
 		}
 
 		this->UpdateView();
@@ -103,11 +117,7 @@ namespace Core {
 		std::string out;
 
 		// 1) Шапка .sln
-		out += "\n";
-		out += "Microsoft Visual Studio Solution File, Format Version 12.00\n";
-		out += "# Visual Studio Version 17\n";
-		out += "VisualStudioVersion = 17.11.35312.102\n";
-		out += "MinimumVisualStudioVersion = 10.0.40219.1\n";
+		out += this->solutionHeader;
 
 		// 2) Корневые узлы (без родителей)
 		auto rootSolutionNodes =
@@ -148,7 +158,7 @@ namespace Core {
 		std::vector<H::Guid> orderedProjectGuidsVector;
 		orderedProjectGuidsVector.reserve(this->view->mapGuidToSolutionNode.size());
 
-		for (const auto& solutionNode : 
+		for (const auto& solutionNode :
 			rootSolutionNodes
 			| std::ex::ranges::views::flatten_tree(expandChildrenFn)
 			) {
@@ -168,7 +178,7 @@ namespace Core {
 		return out;
 	}
 
-	
+
 	//
 	// API
 	//
@@ -260,6 +270,22 @@ namespace Core {
 
 		const auto& parentProjectBlock = this->mapGuidToProjectBlock.at(parentGuid);
 		const auto& childProjectBlock = this->mapGuidToProjectBlock.at(childGuid);
+
+		if (!parentProjectBlock->solutionNode.Is<Model::Project::SolutionFolder>() || parentGuid == childGuid) {
+			throw std::runtime_error("Invalid solution folder parent");
+		}
+		auto ancestor = parentProjectBlock->solutionNode;
+		// Проверяем цепочку родителей до изменения существующей привязки.
+		std::unordered_set<H::Guid> ancestors;
+		while (ancestor) {
+			if (ancestor->guid == childGuid || !ancestors.insert(ancestor->guid).second) {
+				throw std::runtime_error("Cannot create a cycle in NestedProjects");
+			}
+			ancestor = ancestor->GetParent();
+		}
+		this->DeleteNestedProjectsEntries([&](const Model::Global::ParsedNestedProjectsSection::Entry& entry) {
+			return entry.childGuid == childGuid;
+		});
 
 		this->WriteNestedProjectsEntry(
 			Model::Global::ParsedNestedProjectsSection::Entry{
@@ -354,7 +380,7 @@ namespace Core {
 	void SolutionStructure::AddProjectBlockRecursive(
 		const std::ex::shared_ptr<Model::Project::ParsedProjectBlock>& srcProjectBlock
 	) {
-		// Клонируем srcProjectBlock, корректируем пути и передаем ссылку 
+		// Клонируем srcProjectBlock, корректируем пути и передаем ссылку
 		// на собственный solutionStructureProvider.
 		const auto srcSolutionInfo = srcProjectBlock->solutionNode->GetSolutionInfo();
 		const auto srcSolutionDir = srcSolutionInfo.solutionFile.parent_path();
@@ -364,6 +390,34 @@ namespace Core {
 		auto newRelativePath = srcProjectBlock->solutionNode.Is<Model::Project::ProjectNode>()
 			? this->RebuildPathRelativeToCurrentSolution(srcSolutionDir / srcProjectBlock->solutionNode->relativePath)
 			: srcProjectBlock->solutionNode->relativePath; // relativePath для SolutionFolder это ее имя (оставляем тем же).
+
+		const auto existing = this->mapGuidToProjectBlock.find(srcProjectBlock->solutionNode->guid);
+		// Повторную вставку разрешаем только при совпадении идентичности проекта.
+		if (existing != this->mapGuidToProjectBlock.end()) {
+			const auto& target = existing->second->solutionNode;
+			if (target->name != srcProjectBlock->solutionNode->name || target->typeGuid != srcProjectBlock->solutionNode->typeGuid ||
+				target->relativePath.lexically_normal() != newRelativePath.lexically_normal()) {
+				throw std::runtime_error("Project GUID collision");
+			}
+			if (auto folder = srcProjectBlock->solutionNode.As<Model::Project::SolutionFolder>()) {
+				for (const auto& child : folder->GetChildren()) {
+					this->AddProjectBlockRecursive(child->GetProjectBlock());
+				}
+			}
+			return;
+		}
+
+		if (srcProjectBlock->solutionNode.Is<Model::Project::ProjectNode>()) {
+			const auto solutionDir = this->GetSolutionInfo().solutionFile.parent_path();
+			const auto incomingPath = std::filesystem::weakly_canonical(solutionDir / newRelativePath);
+			// Один файл проекта не должен появляться в решении под разными GUID.
+			for (const auto& entry : this->mapGuidToProjectBlock) {
+				if (entry.second->solutionNode.Is<Model::Project::ProjectNode>() &&
+					std::filesystem::weakly_canonical(solutionDir / entry.second->solutionNode->relativePath) == incomingPath) {
+					throw std::runtime_error("Project path already exists with another GUID");
+				}
+			}
+		}
 
 		clonedProjectBlock->solutionNode = srcProjectBlock->solutionNode->Clone(
 			newRelativePath,
@@ -376,14 +430,14 @@ namespace Core {
 
 		this->mapGuidToProjectBlock[clonedProjectBlock->solutionNode->guid] = clonedProjectBlock;
 
-		// Если у исходного узла есть родитель и он уже есть 
+		// Если у исходного узла есть родитель и он уже есть
 		// в mapGuidToProjectBlock — пишем NestedProjects.
 		if (auto srcParentNode = srcProjectBlock->solutionNode->GetParent()) {
 			const auto childGuid = clonedProjectBlock->solutionNode->guid;
 			const auto parentGuid = srcParentNode->guid;
 
-			// Эта проверка нужна на первом стеке рекурсивного вызова, 
-			// т.к. последующие рекурсивный вызовы (для детей) гарантируют что родитель существует.  
+			// Эта проверка нужна на первом стеке рекурсивного вызова,
+			// т.к. последующие рекурсивный вызовы (для детей) гарантируют что родитель существует.
 			const bool parentExistsInTarget = this->mapGuidToProjectBlock.contains(parentGuid);
 			if (parentExistsInTarget) {
 				this->WriteNestedProjectsEntry(
@@ -417,6 +471,13 @@ namespace Core {
 		}
 
 		const auto& projectBlock = this->mapGuidToProjectBlock.at(projectGuid);
+		// Запоминаем детей до удаления записей NestedProjects.
+		std::vector<H::Guid> childGuids;
+		if (auto folder = projectBlock->solutionNode.As<Model::Project::SolutionFolder>()) {
+			for (const auto& child : folder->GetChildren()) {
+				childGuids.push_back(child->guid);
+			}
+		}
 
 		// Удаляем любые строки где встречатеся projectGuid.
 		this->DeleteNestedProjectsEntries(
@@ -435,9 +496,8 @@ namespace Core {
 			this->RemoveProjectNodeEntriesFromGlobalBlock(projectNode);
 		}
 		else if (projectBlock->solutionNode.Is<Model::Project::SolutionFolder>()) {
-			auto solutionFolder = projectBlock->solutionNode.Cast<Model::Project::SolutionFolder>();
-			for (auto& childSolutionNode : solutionFolder->GetChildren()) {
-				this->RemoveProjectBlockRecursive(childSolutionNode->guid);
+			for (const auto& childGuid : childGuids) {
+				this->RemoveProjectBlockRecursive(childGuid);
 			}
 		}
 

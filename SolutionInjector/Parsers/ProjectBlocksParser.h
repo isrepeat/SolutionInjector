@@ -3,6 +3,8 @@
 #include <Helpers/Guid.h>
 
 #include "../Model/Project/ProjectModel.h"
+#include "../Model/RawSections.h"
+
 #include "Project/SolutionItemsSectionParser.h"
 #include "ISectionParser.h"
 
@@ -15,7 +17,7 @@ namespace Core {
 		public:
 			ProjectBlocksParser(std::weak_ptr<Model::ISolutionStructureProvider> solutionStructureProviderWeak)
 				: solutionStructureProviderWeak{ solutionStructureProviderWeak } {
-				
+
 				this->sectionParserMap.emplace(
 					Model::Project::ParsedSolutionItemsSection::SectionName,
 					std::make_unique<Project::SolutionItemsSectionParser>());
@@ -75,6 +77,9 @@ namespace Core {
 								if (auto parsedSection = sectionParser->TryParse(section)) {
 									parsedProjectBlock->sectionMap[key] = parsedSection;
 								}
+							}
+							else {
+								parsedProjectBlock->sectionMap[key] = std::ex::make_shared_ex<Model::RawProjectSection>(section);
 							}
 						}
 					}

@@ -2,6 +2,8 @@
 #include <Helpers/Logger.h>
 
 #include "../Model/Global/GlobalModel.h"
+#include "../Model/RawSections.h"
+
 #include "Global/SolutionConfigurationPlatformsSectionParser.h"
 #include "Global/ProjectConfigurationPlatformsSectionParser.h"
 #include "Global/SharedMSBuildProjectFilesSectionParser.h"
@@ -91,6 +93,11 @@ namespace Core {
                     }
                 }
 
+                for (const auto& [key, section] : solutionDocument.globalBlock.sectionMap) {
+                    if (!this->sectionParserMap.contains(key)) {
+                        parsedGlobalBlockResult->sectionMap[key] = std::ex::make_shared_ex<Model::RawGlobalSection>(section);
+                    }
+                }
                 return parsedGlobalBlockResult;
             }
 

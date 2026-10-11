@@ -49,6 +49,9 @@ namespace Core {
 								}
 							);
 						}
+						else if (line.find_first_not_of(" \t\r\n") != std::string_view::npos) {
+							throw std::runtime_error("Malformed SharedMSBuildProjectFiles entry");
+						}
 					}
 
 					return result;

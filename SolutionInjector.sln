@@ -9,47 +9,47 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "3rdParty", "3rdParty", "{7A
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "3rdParty_Packages_Includes", "3rdParty_Packages_Includes", "{27032BEF-A111-4E76-8365-B362FB70CD39}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "3rdParty.Packages", "..\TabsManagerExtension\UtilityHelpersLib\3rdParty\3rdParty_Packages_Includes\3rdParty.Packages\3rdParty.Packages.vcxproj", "{BD4FF601-0E36-4E0C-91B4-56FA4626A54D}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "3rdParty.Packages", "UtilityHelpersLib\3rdParty\3rdParty_Packages_Includes\3rdParty.Packages\3rdParty.Packages.vcxproj", "{BD4FF601-0E36-4E0C-91B4-56FA4626A54D}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "3rdParty.Includes", "..\TabsManagerExtension\UtilityHelpersLib\3rdParty\3rdParty_Packages_Includes\3rdParty.Includes\3rdParty.Includes.vcxitems", "{63BB29A8-E9C3-4070-9E45-900FA2F2DA8A}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "3rdParty.Includes", "UtilityHelpersLib\3rdParty\3rdParty_Packages_Includes\3rdParty.Includes\3rdParty.Includes.vcxitems", "{63BB29A8-E9C3-4070-9E45-900FA2F2DA8A}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Boost.Includes", "..\TabsManagerExtension\UtilityHelpersLib\3rdParty\3rdParty_Packages_Includes\Boost.Includes\Boost.Includes.vcxitems", "{8E6397BF-29AE-4D5A-A7E7-87F332256BDA}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Boost.Includes", "UtilityHelpersLib\3rdParty\3rdParty_Packages_Includes\Boost.Includes\Boost.Includes.vcxitems", "{8E6397BF-29AE-4D5A-A7E7-87F332256BDA}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "JsonParser", "JsonParser", "{E1A87477-9E41-4151-99A3-3C202225C9C2}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "JsonParser.Static", "..\TabsManagerExtension\UtilityHelpersLib\3rdParty\JsonParser\JsonParser.Static\JsonParser.Static.vcxproj", "{4DC532AD-A19B-4EC5-9923-990DF8F4A9AB}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "JsonParser.Static", "UtilityHelpersLib\3rdParty\JsonParser\JsonParser.Static\JsonParser.Static.vcxproj", "{4DC532AD-A19B-4EC5-9923-990DF8F4A9AB}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "JsonParser.Shared", "..\TabsManagerExtension\UtilityHelpersLib\3rdParty\JsonParser\JsonParser.Shared\JsonParser.Shared.vcxitems", "{05DACBA7-9F59-4442-A519-D32AA0373C0A}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "JsonParser.Shared", "UtilityHelpersLib\3rdParty\JsonParser\JsonParser.Shared\JsonParser.Shared.vcxitems", "{05DACBA7-9F59-4442-A519-D32AA0373C0A}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "MagicEnum", "MagicEnum", "{853963E9-3915-42D1-9F61-D25909CF0CFF}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MagicEnum.Shared", "..\TabsManagerExtension\UtilityHelpersLib\3rdParty\MagicEnum\MagicEnum.Shared\MagicEnum.Shared.vcxitems", "{9119A10A-D27C-4EAF-8EE9-1A3097D8C6F6}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MagicEnum.Shared", "UtilityHelpersLib\3rdParty\MagicEnum\MagicEnum.Shared\MagicEnum.Shared.vcxitems", "{9119A10A-D27C-4EAF-8EE9-1A3097D8C6F6}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Spdlog", "Spdlog", "{63FEF46C-0CC7-468E-9557-732EC7D823AC}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Spdlog.Static", "..\TabsManagerExtension\UtilityHelpersLib\3rdParty\Spdlog\Spdlog.Static\Spdlog.Static.vcxproj", "{4AB35171-9952-4A89-9589-8A63E8BE47E9}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Spdlog.Static", "UtilityHelpersLib\3rdParty\Spdlog\Spdlog.Static\Spdlog.Static.vcxproj", "{4AB35171-9952-4A89-9589-8A63E8BE47E9}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Spdlog.Shared", "..\TabsManagerExtension\UtilityHelpersLib\3rdParty\Spdlog\Spdlog.Shared\Spdlog.Shared.vcxitems", "{34A69FFA-7FAE-4DE7-BAC0-30B5730831E9}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Spdlog.Shared", "UtilityHelpersLib\3rdParty\Spdlog\Spdlog.Shared\Spdlog.Shared.vcxitems", "{34A69FFA-7FAE-4DE7-BAC0-30B5730831E9}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Helpers", "Helpers", "{4A5644B4-23EF-48F7-8F3E-45A0EBE5C607}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ComAPI", "..\TabsManagerExtension\UtilityHelpersLib\Helpers\ComAPI\ComAPI.vcxproj", "{D2F14F8E-303B-4AE6-A98B-B789CD19981D}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ComAPI", "UtilityHelpersLib\Helpers\ComAPI\ComAPI.vcxproj", "{D2F14F8E-303B-4AE6-A98B-B789CD19981D}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Helpers", "..\TabsManagerExtension\UtilityHelpersLib\Helpers\Helpers\Helpers.vcxproj", "{A6A390C3-171D-47B9-B50C-39764BA0BD68}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Helpers", "UtilityHelpersLib\Helpers\Helpers\Helpers.vcxproj", "{A6A390C3-171D-47B9-B50C-39764BA0BD68}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Helpers.Raw", "..\TabsManagerExtension\UtilityHelpersLib\Helpers\Helpers.Raw\Helpers.Raw.vcxproj", "{298AB331-24AA-4F41-916E-2206023F8085}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Helpers.Raw", "UtilityHelpersLib\Helpers\Helpers.Raw\Helpers.Raw.vcxproj", "{298AB331-24AA-4F41-916E-2206023F8085}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Helpers.UWP", "..\TabsManagerExtension\UtilityHelpersLib\Helpers\Helpers.UWP\Helpers.UWP.vcxproj", "{1F26DD5B-02C2-4192-AC91-06BED3D214F3}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Helpers.UWP", "UtilityHelpersLib\Helpers\Helpers.UWP\Helpers.UWP.vcxproj", "{1F26DD5B-02C2-4192-AC91-06BED3D214F3}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Helpers.WinRt", "..\TabsManagerExtension\UtilityHelpersLib\Helpers\Helpers.WinRt\Helpers.WinRt.vcxproj", "{AD8F9708-44EA-4CEC-B78D-C376EB02C2B8}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Helpers.WinRt", "UtilityHelpersLib\Helpers\Helpers.WinRt\Helpers.WinRt.vcxproj", "{AD8F9708-44EA-4CEC-B78D-C376EB02C2B8}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "HelpersWinApi.CX", "..\TabsManagerExtension\UtilityHelpersLib\Helpers\HelpersWinApi.CX\HelpersWinApi.CX.vcxproj", "{6BEC93A0-E1A2-4037-A5DF-5CEEE0AAA5FD}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "HelpersWinApi.CX", "UtilityHelpersLib\Helpers\HelpersWinApi.CX\HelpersWinApi.CX.vcxproj", "{6BEC93A0-E1A2-4037-A5DF-5CEEE0AAA5FD}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ComAPI.Shared", "..\TabsManagerExtension\UtilityHelpersLib\Helpers\ComAPI.Shared\ComAPI.Shared.vcxitems", "{9AE2E2F4-5B16-4D19-9D1F-799A9E18CA69}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ComAPI.Shared", "UtilityHelpersLib\Helpers\ComAPI.Shared\ComAPI.Shared.vcxitems", "{9AE2E2F4-5B16-4D19-9D1F-799A9E18CA69}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Helpers.Includes", "..\TabsManagerExtension\UtilityHelpersLib\Helpers\Helpers.Includes\Helpers.Includes.vcxitems", "{301BF8C8-F7CA-429F-8B12-DED615A64508}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Helpers.Includes", "UtilityHelpersLib\Helpers\Helpers.Includes\Helpers.Includes.vcxitems", "{301BF8C8-F7CA-429F-8B12-DED615A64508}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Helpers.Shared", "..\TabsManagerExtension\UtilityHelpersLib\Helpers\Helpers.Shared\Helpers.Shared.vcxitems", "{A3451486-AB38-4360-B752-94680B491792}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Helpers.Shared", "UtilityHelpersLib\Helpers\Helpers.Shared\Helpers.Shared.vcxitems", "{A3451486-AB38-4360-B752-94680B491792}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SolutionInjector", "SolutionInjector\SolutionInjector.vcxproj", "{FD8E8540-5456-474F-8FFE-FEA3B421A1FA}"
 EndProject
@@ -224,36 +224,36 @@ Global
 		SolutionGuid = {00000000-0000-0000-0000-000000000000}
 	EndGlobalSection
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
-		..\TabsManagerExtension\UtilityHelpersLib\3rdParty\JsonParser\JsonParser.Shared\JsonParser.Shared.vcxitems*{05dacba7-9f59-4442-a519-d32aa0373c0a}*SharedItemsImports = 9
-		..\TabsManagerExtension\UtilityHelpersLib\3rdParty\JsonParser\JsonParser.Shared\JsonParser.Shared.vcxitems*{1f26dd5b-02c2-4192-ac91-06bed3d214f3}*SharedItemsImports = 4
-		..\TabsManagerExtension\UtilityHelpersLib\3rdParty\MagicEnum\MagicEnum.Shared\MagicEnum.Shared.vcxitems*{1f26dd5b-02c2-4192-ac91-06bed3d214f3}*SharedItemsImports = 4
-		..\TabsManagerExtension\UtilityHelpersLib\3rdParty\Spdlog\Spdlog.Shared\Spdlog.Shared.vcxitems*{1f26dd5b-02c2-4192-ac91-06bed3d214f3}*SharedItemsImports = 4
-		..\TabsManagerExtension\UtilityHelpersLib\Helpers\ComAPI.Shared\ComAPI.Shared.vcxitems*{1f26dd5b-02c2-4192-ac91-06bed3d214f3}*SharedItemsImports = 4
-		..\TabsManagerExtension\UtilityHelpersLib\Helpers\Helpers.Shared\Helpers.Shared.vcxitems*{1f26dd5b-02c2-4192-ac91-06bed3d214f3}*SharedItemsImports = 4
-		..\TabsManagerExtension\UtilityHelpersLib\3rdParty\3rdParty_Packages_Includes\Boost.Includes\Boost.Includes.vcxitems*{298ab331-24aa-4f41-916e-2206023f8085}*SharedItemsImports = 4
-		..\TabsManagerExtension\UtilityHelpersLib\3rdParty\JsonParser\JsonParser.Shared\JsonParser.Shared.vcxitems*{298ab331-24aa-4f41-916e-2206023f8085}*SharedItemsImports = 4
-		..\TabsManagerExtension\UtilityHelpersLib\3rdParty\MagicEnum\MagicEnum.Shared\MagicEnum.Shared.vcxitems*{298ab331-24aa-4f41-916e-2206023f8085}*SharedItemsImports = 4
-		..\TabsManagerExtension\UtilityHelpersLib\3rdParty\Spdlog\Spdlog.Shared\Spdlog.Shared.vcxitems*{298ab331-24aa-4f41-916e-2206023f8085}*SharedItemsImports = 4
-		..\TabsManagerExtension\UtilityHelpersLib\Helpers\ComAPI.Shared\ComAPI.Shared.vcxitems*{298ab331-24aa-4f41-916e-2206023f8085}*SharedItemsImports = 4
-		..\TabsManagerExtension\UtilityHelpersLib\Helpers\Helpers.Shared\Helpers.Shared.vcxitems*{298ab331-24aa-4f41-916e-2206023f8085}*SharedItemsImports = 4
-		..\TabsManagerExtension\UtilityHelpersLib\Helpers\Helpers.Includes\Helpers.Includes.vcxitems*{301bf8c8-f7ca-429f-8b12-ded615a64508}*SharedItemsImports = 9
-		..\TabsManagerExtension\UtilityHelpersLib\3rdParty\Spdlog\Spdlog.Shared\Spdlog.Shared.vcxitems*{34a69ffa-7fae-4de7-bac0-30b5730831e9}*SharedItemsImports = 9
-		..\TabsManagerExtension\UtilityHelpersLib\3rdParty\MagicEnum\MagicEnum.Shared\MagicEnum.Shared.vcxitems*{4ab35171-9952-4a89-9589-8a63e8be47e9}*SharedItemsImports = 4
-		..\TabsManagerExtension\UtilityHelpersLib\3rdParty\Spdlog\Spdlog.Shared\Spdlog.Shared.vcxitems*{4ab35171-9952-4a89-9589-8a63e8be47e9}*SharedItemsImports = 4
-		..\TabsManagerExtension\UtilityHelpersLib\Helpers\Helpers.Includes\Helpers.Includes.vcxitems*{4ab35171-9952-4a89-9589-8a63e8be47e9}*SharedItemsImports = 4
-		..\TabsManagerExtension\UtilityHelpersLib\3rdParty\JsonParser\JsonParser.Shared\JsonParser.Shared.vcxitems*{4dc532ad-a19b-4ec5-9923-990df8f4a9ab}*SharedItemsImports = 4
-		..\TabsManagerExtension\UtilityHelpersLib\Helpers\Helpers.Includes\Helpers.Includes.vcxitems*{4dc532ad-a19b-4ec5-9923-990df8f4a9ab}*SharedItemsImports = 4
-		..\TabsManagerExtension\UtilityHelpersLib\3rdParty\3rdParty_Packages_Includes\3rdParty.Includes\3rdParty.Includes.vcxitems*{63bb29a8-e9c3-4070-9e45-900fa2f2da8a}*SharedItemsImports = 9
-		..\TabsManagerExtension\UtilityHelpersLib\Helpers\Helpers.Includes\Helpers.Includes.vcxitems*{6bec93a0-e1a2-4037-a5df-5ceee0aaa5fd}*SharedItemsImports = 4
-		..\TabsManagerExtension\UtilityHelpersLib\3rdParty\3rdParty_Packages_Includes\Boost.Includes\Boost.Includes.vcxitems*{8e6397bf-29ae-4d5a-a7e7-87f332256bda}*SharedItemsImports = 9
-		..\TabsManagerExtension\UtilityHelpersLib\3rdParty\MagicEnum\MagicEnum.Shared\MagicEnum.Shared.vcxitems*{9119a10a-d27c-4eaf-8ee9-1a3097d8c6f6}*SharedItemsImports = 9
-		..\TabsManagerExtension\UtilityHelpersLib\Helpers\ComAPI.Shared\ComAPI.Shared.vcxitems*{9ae2e2f4-5b16-4d19-9d1f-799a9e18ca69}*SharedItemsImports = 9
-		..\TabsManagerExtension\UtilityHelpersLib\Helpers\Helpers.Shared\Helpers.Shared.vcxitems*{a3451486-ab38-4360-b752-94680b491792}*SharedItemsImports = 9
-		..\TabsManagerExtension\UtilityHelpersLib\3rdParty\3rdParty_Packages_Includes\Boost.Includes\Boost.Includes.vcxitems*{a6a390c3-171d-47b9-b50c-39764ba0bd68}*SharedItemsImports = 4
-		..\TabsManagerExtension\UtilityHelpersLib\3rdParty\MagicEnum\MagicEnum.Shared\MagicEnum.Shared.vcxitems*{a6a390c3-171d-47b9-b50c-39764ba0bd68}*SharedItemsImports = 4
-		..\TabsManagerExtension\UtilityHelpersLib\Helpers\Helpers.Shared\Helpers.Shared.vcxitems*{a6a390c3-171d-47b9-b50c-39764ba0bd68}*SharedItemsImports = 4
-		..\TabsManagerExtension\UtilityHelpersLib\3rdParty\3rdParty_Packages_Includes\3rdParty.Includes\3rdParty.Includes.vcxitems*{ad8f9708-44ea-4cec-b78d-c376eb02c2b8}*SharedItemsImports = 4
-		..\TabsManagerExtension\UtilityHelpersLib\Helpers\Helpers.Includes\Helpers.Includes.vcxitems*{ad8f9708-44ea-4cec-b78d-c376eb02c2b8}*SharedItemsImports = 4
-		..\TabsManagerExtension\UtilityHelpersLib\Helpers\ComAPI.Shared\ComAPI.Shared.vcxitems*{d2f14f8e-303b-4ae6-a98b-b789cd19981d}*SharedItemsImports = 4
+		UtilityHelpersLib\3rdParty\JsonParser\JsonParser.Shared\JsonParser.Shared.vcxitems*{05dacba7-9f59-4442-a519-d32aa0373c0a}*SharedItemsImports = 9
+		UtilityHelpersLib\3rdParty\JsonParser\JsonParser.Shared\JsonParser.Shared.vcxitems*{1f26dd5b-02c2-4192-ac91-06bed3d214f3}*SharedItemsImports = 4
+		UtilityHelpersLib\3rdParty\MagicEnum\MagicEnum.Shared\MagicEnum.Shared.vcxitems*{1f26dd5b-02c2-4192-ac91-06bed3d214f3}*SharedItemsImports = 4
+		UtilityHelpersLib\3rdParty\Spdlog\Spdlog.Shared\Spdlog.Shared.vcxitems*{1f26dd5b-02c2-4192-ac91-06bed3d214f3}*SharedItemsImports = 4
+		UtilityHelpersLib\Helpers\ComAPI.Shared\ComAPI.Shared.vcxitems*{1f26dd5b-02c2-4192-ac91-06bed3d214f3}*SharedItemsImports = 4
+		UtilityHelpersLib\Helpers\Helpers.Shared\Helpers.Shared.vcxitems*{1f26dd5b-02c2-4192-ac91-06bed3d214f3}*SharedItemsImports = 4
+		UtilityHelpersLib\3rdParty\3rdParty_Packages_Includes\Boost.Includes\Boost.Includes.vcxitems*{298ab331-24aa-4f41-916e-2206023f8085}*SharedItemsImports = 4
+		UtilityHelpersLib\3rdParty\JsonParser\JsonParser.Shared\JsonParser.Shared.vcxitems*{298ab331-24aa-4f41-916e-2206023f8085}*SharedItemsImports = 4
+		UtilityHelpersLib\3rdParty\MagicEnum\MagicEnum.Shared\MagicEnum.Shared.vcxitems*{298ab331-24aa-4f41-916e-2206023f8085}*SharedItemsImports = 4
+		UtilityHelpersLib\3rdParty\Spdlog\Spdlog.Shared\Spdlog.Shared.vcxitems*{298ab331-24aa-4f41-916e-2206023f8085}*SharedItemsImports = 4
+		UtilityHelpersLib\Helpers\ComAPI.Shared\ComAPI.Shared.vcxitems*{298ab331-24aa-4f41-916e-2206023f8085}*SharedItemsImports = 4
+		UtilityHelpersLib\Helpers\Helpers.Shared\Helpers.Shared.vcxitems*{298ab331-24aa-4f41-916e-2206023f8085}*SharedItemsImports = 4
+		UtilityHelpersLib\Helpers\Helpers.Includes\Helpers.Includes.vcxitems*{301bf8c8-f7ca-429f-8b12-ded615a64508}*SharedItemsImports = 9
+		UtilityHelpersLib\3rdParty\Spdlog\Spdlog.Shared\Spdlog.Shared.vcxitems*{34a69ffa-7fae-4de7-bac0-30b5730831e9}*SharedItemsImports = 9
+		UtilityHelpersLib\3rdParty\MagicEnum\MagicEnum.Shared\MagicEnum.Shared.vcxitems*{4ab35171-9952-4a89-9589-8a63e8be47e9}*SharedItemsImports = 4
+		UtilityHelpersLib\3rdParty\Spdlog\Spdlog.Shared\Spdlog.Shared.vcxitems*{4ab35171-9952-4a89-9589-8a63e8be47e9}*SharedItemsImports = 4
+		UtilityHelpersLib\Helpers\Helpers.Includes\Helpers.Includes.vcxitems*{4ab35171-9952-4a89-9589-8a63e8be47e9}*SharedItemsImports = 4
+		UtilityHelpersLib\3rdParty\JsonParser\JsonParser.Shared\JsonParser.Shared.vcxitems*{4dc532ad-a19b-4ec5-9923-990df8f4a9ab}*SharedItemsImports = 4
+		UtilityHelpersLib\Helpers\Helpers.Includes\Helpers.Includes.vcxitems*{4dc532ad-a19b-4ec5-9923-990df8f4a9ab}*SharedItemsImports = 4
+		UtilityHelpersLib\3rdParty\3rdParty_Packages_Includes\3rdParty.Includes\3rdParty.Includes.vcxitems*{63bb29a8-e9c3-4070-9e45-900fa2f2da8a}*SharedItemsImports = 9
+		UtilityHelpersLib\Helpers\Helpers.Includes\Helpers.Includes.vcxitems*{6bec93a0-e1a2-4037-a5df-5ceee0aaa5fd}*SharedItemsImports = 4
+		UtilityHelpersLib\3rdParty\3rdParty_Packages_Includes\Boost.Includes\Boost.Includes.vcxitems*{8e6397bf-29ae-4d5a-a7e7-87f332256bda}*SharedItemsImports = 9
+		UtilityHelpersLib\3rdParty\MagicEnum\MagicEnum.Shared\MagicEnum.Shared.vcxitems*{9119a10a-d27c-4eaf-8ee9-1a3097d8c6f6}*SharedItemsImports = 9
+		UtilityHelpersLib\Helpers\ComAPI.Shared\ComAPI.Shared.vcxitems*{9ae2e2f4-5b16-4d19-9d1f-799a9e18ca69}*SharedItemsImports = 9
+		UtilityHelpersLib\Helpers\Helpers.Shared\Helpers.Shared.vcxitems*{a3451486-ab38-4360-b752-94680b491792}*SharedItemsImports = 9
+		UtilityHelpersLib\3rdParty\3rdParty_Packages_Includes\Boost.Includes\Boost.Includes.vcxitems*{a6a390c3-171d-47b9-b50c-39764ba0bd68}*SharedItemsImports = 4
+		UtilityHelpersLib\3rdParty\MagicEnum\MagicEnum.Shared\MagicEnum.Shared.vcxitems*{a6a390c3-171d-47b9-b50c-39764ba0bd68}*SharedItemsImports = 4
+		UtilityHelpersLib\Helpers\Helpers.Shared\Helpers.Shared.vcxitems*{a6a390c3-171d-47b9-b50c-39764ba0bd68}*SharedItemsImports = 4
+		UtilityHelpersLib\3rdParty\3rdParty_Packages_Includes\3rdParty.Includes\3rdParty.Includes.vcxitems*{ad8f9708-44ea-4cec-b78d-c376eb02c2b8}*SharedItemsImports = 4
+		UtilityHelpersLib\Helpers\Helpers.Includes\Helpers.Includes.vcxitems*{ad8f9708-44ea-4cec-b78d-c376eb02c2b8}*SharedItemsImports = 4
+		UtilityHelpersLib\Helpers\ComAPI.Shared\ComAPI.Shared.vcxitems*{d2f14f8e-303b-4ae6-a98b-b789cd19981d}*SharedItemsImports = 4
 	EndGlobalSection
 EndGlobal

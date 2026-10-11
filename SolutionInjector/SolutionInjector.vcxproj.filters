@@ -118,4 +118,32 @@
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Source Files\Cli" />
+    <Filter Include="Source Files\Dependencies" />
+    <Filter Include="Source Files\Operations" />
+    <Filter Include="Source Files\Helpers" />
+    <Filter Include="Source Files\IO" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Cli\CleanupCommand.cpp"><Filter>Source Files\Cli</Filter></ClCompile>
+    <ClCompile Include="Cli\JsonSerializer.cpp"><Filter>Source Files\Cli</Filter></ClCompile>
+    <ClInclude Include="Cli\CleanupCommand.h"><Filter>Source Files\Cli</Filter></ClInclude>
+    <ClInclude Include="Cli\JsonScheme.h"><Filter>Source Files\Cli</Filter></ClInclude>
+    <ClInclude Include="Cli\JsonSerializer.h"><Filter>Source Files\Cli</Filter></ClInclude>
+    <ClInclude Include="Cli\CleanupArgs.h"><Filter>Source Files\Cli</Filter></ClInclude>
+    <ClCompile Include="Dependencies\DependencyGraph.cpp"><Filter>Source Files\Dependencies</Filter></ClCompile>
+    <ClInclude Include="Dependencies\DependencyGraph.h"><Filter>Source Files\Dependencies</Filter></ClInclude>
+    <ClCompile Include="Dependencies\MsBuildDependencyReader.cpp"><Filter>Source Files\Dependencies</Filter></ClCompile>
+    <ClInclude Include="Dependencies\MsBuildDependencyReader.h"><Filter>Source Files\Dependencies</Filter></ClInclude>
+    <ClCompile Include="Dependencies\ProjectDependencyAnalyzer.cpp"><Filter>Source Files\Dependencies</Filter></ClCompile>
+    <ClInclude Include="Dependencies\ProjectDependencyAnalyzer.h"><Filter>Source Files\Dependencies</Filter></ClInclude>
+    <ClCompile Include="Operations\SolutionCleanupPlanner.cpp"><Filter>Source Files\Operations</Filter></ClCompile>
+    <ClInclude Include="Operations\SolutionCleanupPlanner.h"><Filter>Source Files\Operations</Filter></ClInclude>
+    <ClCompile Include="Helpers\TextHelpers.cpp"><Filter>Source Files\Helpers</Filter></ClCompile>
+    <ClInclude Include="Helpers\TextHelpers.h"><Filter>Source Files\Helpers</Filter></ClInclude>
+    <ClCompile Include="IO\FileSnapshot.cpp"><Filter>Source Files\IO</Filter></ClCompile>
+    <ClInclude Include="IO\FileSnapshot.h"><Filter>Source Files\IO</Filter></ClInclude>
+    <ClInclude Include="Model\RawSections.h"><Filter>Source Files\Model</Filter></ClInclude>
+  </ItemGroup>
 </Project>

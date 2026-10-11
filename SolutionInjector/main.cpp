@@ -3,6 +3,7 @@
 #include <Helpers/Pipeline.h>
 #include <Helpers/Logger.h>
 
+#include "Cli/CleanupCommand.h"
 #include "SolutionFileAnalyzer.h"
 #include "SolutionStructure.h"
 
@@ -13,7 +14,7 @@
 
 //
 // ░ CmdArgs
-// ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░ 
+// ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 //
 struct CmdArgs {
 	using CommandLineParser_t = H::CommandLineParserA;
@@ -34,7 +35,7 @@ struct CmdArgs {
 			{ "--rootName", EVC::Single, false },
 			{ "-f", EVC::Multiple, false },
 			{ "-p", EVC::Multiple, false },
-			{ "-rmCfg", EVC::Multiple, false }, // remove solution config (key: "<Cfg>|<Platform>")
+			{ "-rmCfg", EVC::Multiple, false }, // Удаляем конфигурацию решения: "<Cfg>|<Platform>".
 		};
 	}
 
@@ -61,9 +62,9 @@ struct CmdArgs {
 		out.projects = std::unordered_set<string_t>{ projects.begin(), projects.end() };
 
 		const auto& solutionConfigKeysToRemove = cmdLineParser.GetAll("-rmCfg");
-		out.solutionConfigKeysToRemove = std::unordered_set<string_t>{ 
+		out.solutionConfigKeysToRemove = std::unordered_set<string_t>{
 			solutionConfigKeysToRemove.begin(),
-			solutionConfigKeysToRemove.end() 
+			solutionConfigKeysToRemove.end()
 		};
 	}
 
@@ -85,7 +86,7 @@ struct CmdArgs {
 
 //
 // ░ TransformSolutionPipeline
-// ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░ 
+// ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 //
 class TransformSolutionPipeline : public H::Pipeline<TransformSolutionPipeline> {
 public:
@@ -154,7 +155,7 @@ private:
 				})
 			| std::ex::ranges::views::to<std::vector<std::ex::shared_ptr<Model::Project::SolutionNode>>>();
 
-		// Собираем множество дочерних проектов из selectedFolders, чтоб далее исключить их 
+		// Собираем множество дочерних проектов из selectedFolders, чтоб далее исключить их
 		// из cmdArgs.projects, т.к. эти проекты будут вставлены все равно рекурсивно.
 		auto projectNamesUnderSelectedFolders =
 			selectedSolutionFolders
@@ -228,44 +229,51 @@ private:
 
 //
 // ░ Main
-// ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░ 
+// ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 //
 int main(int argc, char* argv[]) {
-#ifdef _DEBUG
-	const char* debugArgs[] = {
-		"Path_to_executable",
-		//"d:\\WORK\\C++\\Cpp\\UtilityHelpersLib\\UtilityHelpersLib.sln",
-		//"d:\\WORK\\C++\\Cpp\\Cpp.sln",
-		"..\\..\\UtilityHelpersLib.sln",
-		"..\\..\\..\\TabsManagerExtension.sln",
-		//"--normalize",
-		//"-rmCfg", "Debug|ARM",
-		//"-rmCfg", "Debug|ARM64",
-		//"-rmCfg", "Release|ARM",
-		//"-rmCfg", "Release|ARM64",
-		"--rootName", "UtilityHelpersLib [submodule]",
-		//"-f", "3rdParty",
-		//"-f", "Helpers",
-		//"-p", "ComAPI",
-		"-p", "ComAPI.Shared",
-		//"-p", "Helpers.Raw",
-		//"-p", "Helpers.Shared",
-		//"-p", "Helpers.Includes",
-		//"-f", "HelpersCs",
-		//"-p", "HelpersCs",
-		//"-p", "HelpersCs.Visual",
-	};
-	argc = sizeof(debugArgs) / sizeof(debugArgs[0]);
-	argv = const_cast<char**>(debugArgs);
-#endif
+	auto descriptions = CmdArgs::Description();
+	for (auto flagDesc : Core::Cli::CleanupArgs::Description()) {
+		flagDesc.required = false;
+		descriptions.push_back(flagDesc);
+	}
+	descriptions.push_back({ "--version", H::CommandLineParserA::ExpectedValuesCount::None, false });
+	H::CommandLineParserA commandLineParser{ descriptions };
+	try {
+		commandLineParser.Parse(argc, argv);
+	} catch (const std::exception& exception) {
+		std::cerr << exception.what() << '\n';
+		return 1;
+	}
+	const auto& positional = commandLineParser.GetPositional();
+	const bool cleanupCommand = !positional.empty() && (positional[0] == "analyze" || positional[0] == "prune");
+	if (commandLineParser.Has("--version")) {
+		if (argc != 2) {
+			std::cerr << "--version must be used alone\n";
+			return 1;
+		}
+		std::cout << "SolutionInjector (analyze, prune, scoped-cleanup)\n";
+		return 0;
+	}
 
-	// Init logger
+	// Инициализируем логирование; JSON-команды не пишут служебные логи в stdout.
 	H::Flags<lg::InitFlags> loggerInitFlags =
 		lg::InitFlags::DefaultFlags |
-		lg::InitFlags::EnableLogToStdout |
 		lg::InitFlags::CreateInExeFolderForDesktop;
 
+	if (!cleanupCommand) {
+		loggerInitFlags |= lg::InitFlags::EnableLogToStdout;
+	}
 	lg::DefaultLoggers::Init(L"SolutionInjector.log", loggerInitFlags);
+	if (cleanupCommand) {
+		try {
+			const auto cleanupArgs = H::CommandLineParserA::ParseTo<Core::Cli::CleanupArgs>(argc, argv);
+			return Core::Cli::RunCleanupCommand(cleanupArgs);
+		} catch (const std::exception& exception) {
+			std::cerr << exception.what() << '\n';
+			return 1;
+		}
+	}
 
 	LOG_DEBUG_D("Received arguments (argc = {}):", argc);
 	for (int i = 0; i < argc; ++i) {
@@ -279,7 +287,8 @@ int main(int argc, char* argv[]) {
 
 	try {
 		const auto cmdArgs = H::CommandLineParserA::ParseTo<CmdArgs>(argc, argv);
-		
+		cmdArgs.Validate();
+
 		auto sourceSlnStructure = Core::SolutionFileAnalyzer::BuildSolutionStructure(cmdArgs.sourceSlnPath);
 		//LOG_DEBUG_D("sourceSlnStructure:");
 		//sourceSlnStructure->LogSerializedSolution();
@@ -301,15 +310,10 @@ int main(int argc, char* argv[]) {
 			targetSlnStructure->Save();
 		}
 
-		return 0;
+		return errorCode ? 1 : 0;
 	}
 	catch (const std::exception& ex) {
 		LOG_ERROR_D("exception = {}", ex.what());
 		return 1;
 	}
-
-#ifdef _DEBUG
-	system("pause");
-#endif
-	return 0;
 }

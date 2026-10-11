@@ -132,6 +132,14 @@
   <ItemGroup>
     <ClCompile Include="DefaultSolutionStructureProvider.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="Cli\CleanupCommand.cpp" />
+    <ClCompile Include="Cli\JsonSerializer.cpp" />
+    <ClCompile Include="Dependencies\DependencyGraph.cpp" />
+    <ClCompile Include="Dependencies\MsBuildDependencyReader.cpp" />
+    <ClCompile Include="Dependencies\ProjectDependencyAnalyzer.cpp" />
+    <ClCompile Include="Operations\SolutionCleanupPlanner.cpp" />
+    <ClCompile Include="Helpers\TextHelpers.cpp" />
+    <ClCompile Include="IO\FileSnapshot.cpp" />
     <ClCompile Include="Model\Global\GlobalModel.cpp" />
     <ClCompile Include="Singletons\Constants.cpp" />
     <ClCompile Include="SolutionFileAnalyzer.cpp" />
@@ -139,6 +147,17 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="DefaultSolutionStructureProvider.h" />
+    <ClInclude Include="Cli/CleanupCommand.h" />
+    <ClInclude Include="Cli/JsonScheme.h" />
+    <ClInclude Include="Cli/JsonSerializer.h" />
+    <ClInclude Include="Cli/CleanupArgs.h" />
+    <ClInclude Include="Dependencies/DependencyGraph.h" />
+    <ClInclude Include="Dependencies/MsBuildDependencyReader.h" />
+    <ClInclude Include="Dependencies/ProjectDependencyAnalyzer.h" />
+    <ClInclude Include="Operations/SolutionCleanupPlanner.h" />
+    <ClInclude Include="Helpers/TextHelpers.h" />
+    <ClInclude Include="IO/FileSnapshot.h" />
+    <ClInclude Include="Model/RawSections.h" />
     <ClInclude Include="Model\Entries.h" />
     <ClInclude Include="Model\Global\GlobalModel.h" />
     <ClInclude Include="Model\ISerializable.h" />
@@ -162,10 +181,18 @@
     <ClInclude Include="SolutionStructure.h" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\TabsManagerExtension\UtilityHelpersLib\Helpers\Helpers.Raw\Helpers.Raw.vcxproj">
+    <ProjectReference Include="..\UtilityHelpersLib\Helpers\Helpers.Raw\Helpers.Raw.vcxproj">
       <Project>{298ab331-24aa-4f41-916e-2206023f8085}</Project>
     </ProjectReference>
   </ItemGroup>
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
+      <!-- Старый StreamLineReader использует std::getline без собственного include string. -->
+      <ForcedIncludeFiles>string;%(ForcedIncludeFiles)</ForcedIncludeFiles>
+    </ClCompile>
+    <Link><AdditionalDependencies>ole32.lib;oleaut32.lib;uuid.lib;%(AdditionalDependencies)</AdditionalDependencies></Link>
+  </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
