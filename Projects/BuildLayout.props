@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <!-- Корень привязан к репозиторию и не зависит от расположения solution. -->
+    <SolutionInjectorArtifactsRoot>$(MSBuildThisFileDirectory)..\!artifacts\projects\</SolutionInjectorArtifactsRoot>
+    <SolutionInjectorTargetPlatform Condition="'$(SolutionInjectorTargetPlatform)' == ''">Windows-$(Platform)</SolutionInjectorTargetPlatform>
+    <!-- CRT используется как часть пути; режим компилятора задаёт сам проект. -->
+    <SolutionInjectorRuntime Condition="'$(SolutionInjectorRuntime)' == ''">Dynamic</SolutionInjectorRuntime>
+    <__SolutionInjectorRuntimeDirectory Condition="'$(SolutionInjectorRuntime)' == 'Dynamic'">md</__SolutionInjectorRuntimeDirectory>
+    <__SolutionInjectorRuntimeDirectory Condition="'$(SolutionInjectorRuntime)' == 'Static'">mt</__SolutionInjectorRuntimeDirectory>
+    <__SolutionInjectorProjectArtifacts>$(SolutionInjectorArtifactsRoot)$(SolutionInjectorTargetPlatform)\msbuild\$(MSBuildProjectName)\$(PlatformToolset)\$(VCToolsVersion)\$(__SolutionInjectorRuntimeDirectory)\$(Configuration)\</__SolutionInjectorProjectArtifacts>
+    <OutDir>$(__SolutionInjectorProjectArtifacts)bin\</OutDir>
+    <IntDir>$(__SolutionInjectorProjectArtifacts)obj\</IntDir>
+    <TLogLocation>$(IntDir)tlog\</TLogLocation>
+  </PropertyGroup>
+</Project>

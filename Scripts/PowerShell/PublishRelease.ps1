@@ -3,7 +3,7 @@ param(
     [string]$Repository = 'isrepeat/SolutionInjector',
     [string]$Target = 'refs/heads/Last',
     [string]$StableTag = 'Last',
-    [string]$ExePath,
+    [string]$ProjectPath,
     [string]$RuntimeDirectory,
     [string]$Title,
     [switch]$Draft,
@@ -42,8 +42,29 @@ try {
     if ($StableTag -notmatch '^[A-Za-z0-9][A-Za-z0-9._-]*$' -or $StableTag -eq $Tag) { throw 'Invalid or conflicting stable tag.' }
     if ($Repository -notmatch '^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$') { throw 'Expected GitHub owner/repository.' }
     $commit = (InvokeChecked 'git' @('-C', $repositoryRoot, 'rev-parse', '--verify', "$Target^{commit}")).Trim()
-    if (-not $ExePath) { $ExePath = Join-Path $repositoryRoot 'bin/SolutionInjector.exe' }
-    $executable = (Resolve-Path -LiteralPath $ExePath).Path
+
+    # 2. Пересобираем выбранный проект в Release x64; старый EXE не используется при ошибке сборки.
+    $headCommit = (InvokeChecked 'git' @('-C', $repositoryRoot, 'rev-parse', '--verify', 'HEAD')).Trim()
+    if ($headCommit -ne $commit) { throw 'Target must resolve to the current HEAD because the current working tree is built.' }
+    $workingTreeModified = @(InvokeChecked 'git' @('-C', $repositoryRoot, 'status', '--porcelain', '--untracked-files=normal')).Count -gt 0
+    if (-not $ProjectPath) { $ProjectPath = 'SolutionInjector/SolutionInjector.vcxproj' }
+    if (-not [IO.Path]::IsPathRooted($ProjectPath)) { $ProjectPath = Join-Path $repositoryRoot $ProjectPath }
+    $ProjectPath = (Resolve-Path -LiteralPath $ProjectPath).Path
+    $repositoryPrefix = $repositoryRoot.TrimEnd('\', '/') + [IO.Path]::DirectorySeparatorChar
+    if (-not $ProjectPath.StartsWith($repositoryPrefix, [StringComparison]::OrdinalIgnoreCase)) { throw 'ProjectPath must belong to the SolutionInjector repository.' }
+    if ([IO.Path]::GetExtension($ProjectPath) -ne '.vcxproj') { throw 'ProjectPath must point to a C++ .vcxproj project.' }
+    $vswhere = Join-Path ${env:ProgramFiles(x86)} 'Microsoft Visual Studio/Installer/vswhere.exe'
+    if (-not (Test-Path -LiteralPath $vswhere)) { throw 'Visual Studio MSBuild with C++ tools is required.' }
+    $msbuildCandidates = @(InvokeChecked $vswhere @('-latest', '-products', '*', '-requires', 'Microsoft.Component.MSBuild', 'Microsoft.VisualStudio.Component.VC.Tools.x86.x64', '-find', 'MSBuild/Current/Bin/MSBuild.exe'))
+    if (-not $msbuildCandidates.Count) { throw 'MSBuild with C++ tools was not found.' }
+    $msbuild = $msbuildCandidates[0]
+    Write-Host "Building Release x64: $ProjectPath"
+    & $msbuild $ProjectPath -nologo -m -t:Rebuild /p:Configuration=Release /p:Platform=x64 "/p:SolutionDir=$repositoryRoot/"
+    if ($LASTEXITCODE -ne 0) { throw "Release build failed with exit code $LASTEXITCODE. Nothing was published." }
+    $targetPath = InvokeChecked $msbuild @($ProjectPath, '-nologo', '-verbosity:quiet', '-getProperty:TargetPath', '/p:Configuration=Release', '/p:Platform=x64', "/p:SolutionDir=$repositoryRoot/")
+    $executablePath = ($targetPath -join "`n").Trim()
+    if (-not $executablePath) { throw 'MSBuild did not return TargetPath.' }
+    $executable = (Resolve-Path -LiteralPath $executablePath).Path
     if (-not (Test-Path -LiteralPath $executable -PathType Leaf)) { throw 'Executable not found.' }
     # Проверяем PE-заголовок: этот архив предназначен только для Windows x64.
     $stream = [IO.File]::OpenRead($executable)
@@ -79,7 +100,7 @@ try {
         }
     }
 
-    # Новый каталог на каждый запуск исключает старые файлы из дистрибуции.
+    # 3. Подготавливаем отдельный архив и контрольные суммы до запроса публикации.
     $outputDirectory = Join-Path $repositoryRoot ('!artifacts/releases/' + $Tag + '/' + [Guid]::NewGuid().ToString('N'))
     $packageDirectory = Join-Path $outputDirectory 'package'
     New-Item -ItemType Directory -Path $packageDirectory -Force | Out-Null
@@ -88,12 +109,16 @@ try {
         ForEach-Object { Copy-Item -LiteralPath $_.FullName -Destination $packageDirectory }
     $archive = Join-Path $outputDirectory ("SolutionInjector-$Tag-windows-x64.zip")
     Compress-Archive -Path (Join-Path $packageDirectory '*') -DestinationPath $archive
-    $exeHash = (Get-FileHash -LiteralPath $executable -Algorithm SHA256).Hash
+    $exeHash = (Get-FileHash -LiteralPath (Join-Path $packageDirectory 'SolutionInjector.exe') -Algorithm SHA256).Hash
     $archiveHash = (Get-FileHash -LiteralPath $archive -Algorithm SHA256).Hash
     Write-Host "Archive: $archive"
     Write-Host "Archive SHA-256: $archiveHash"
     Write-Host "EXE SHA-256: $exeHash"
     Write-Host "Target commit: $commit"
+    Write-Host "Working tree modified: $workingTreeModified"
+    Write-Host "Project: $ProjectPath"
+    Write-Host 'Configuration: Release|x64'
+    Write-Host "Repository: $Repository"
     Write-Host "Release tag: $Tag"
     Write-Host "Stable tag: $StableTag"
     if ($PrepareOnly) { return }
@@ -104,7 +129,8 @@ try {
     $notes = @(
         'Windows x64 executable with app-local Visual C++ Runtime DLLs.',
         "Target commit: $commit",
-        'The supplied executable is packaged as-is; this script does not build or verify its source provenance.',
+        "Built from project: $ProjectPath (Release|x64).",
+        "Working tree modified at build start: $workingTreeModified. Uncommitted changes are included when true.",
         "Archive SHA-256: $archiveHash",
         "EXE SHA-256: $exeHash"
     ) -join "`n"
@@ -112,10 +138,20 @@ try {
     $arguments = @('release', 'create', $Tag, $archive, '--repo', $Repository,
         '--target', $commit, '--title', $Title, '--notes-file', $notesPath)
     if ($Draft) { $arguments += '--draft' }
+    # 4. Публикация, включая черновик, разрешается только после явного ввода y.
+    $releaseKind = if ($Draft) { 'draft release' } else { 'release' }
+    Write-Host "Ready to publish $releaseKind $Tag to $Repository."
+    if (-not $Draft) { Write-Host "Stable tag $StableTag will be updated to $commit." }
+    $confirmation = Read-Host 'Publish to GitHub? Type y to confirm'
+    if ($confirmation -cne 'y') {
+        Write-Host "Publication cancelled. Prepared archive: $archive"
+        return
+    }
+
     # Публикация не коммитит и не отправляет локальные изменения.
     InvokeChecked 'gh' $arguments | Out-Host
 
-    # 2. После публикации перемещаем стабильный тег; ветка Last остаётся отдельной ссылкой.
+    # 5. После публикации перемещаем стабильный тег; ветка Last остаётся отдельной ссылкой.
     # Черновик и подготовка архива не меняют стабильный тег.
     if (-not $Draft) {
         $stableRef = @(InvokeChecked 'git' @('ls-remote', '--tags', "https://github.com/$Repository.git", "refs/tags/$StableTag"))

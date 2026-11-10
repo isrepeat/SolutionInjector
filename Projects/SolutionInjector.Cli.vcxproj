@@ -5,6 +5,7 @@
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ImportDirectoryBuildTargets>false</ImportDirectoryBuildTargets>
+    <SolutionInjectorRuntime>Static</SolutionInjectorRuntime>
     <ProjectGuid>{22DB02F9-DA78-4A46-94AF-7D76299F0B63}</ProjectGuid>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
@@ -15,10 +16,9 @@
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <Import Project="BuildLayout.props" />
   <PropertyGroup>
     <TargetName>SolutionInjector</TargetName>
-    <OutDir>$(MSBuildThisFileDirectory)..\!artifacts\standalone\bin\</OutDir>
-    <IntDir>$(MSBuildThisFileDirectory)..\!artifacts\standalone\obj\</IntDir>
   </PropertyGroup>
   <ItemDefinitionGroup>
     <ClCompile>

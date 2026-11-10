@@ -17,8 +17,9 @@ desired.sln описывает полный желаемый набор прое
 
 ```powershell
 MSBuild Projects/SolutionInjector.Cli.vcxproj /p:Configuration=Release /p:Platform=x64
-./Tests/Sync.Tests.ps1 -Executable ./!artifacts/standalone/bin/SolutionInjector.exe
-./Tests/Run.ps1 -Executable ./!artifacts/standalone/bin/SolutionInjector.exe
+$cli = & MSBuild Projects/SolutionInjector.Cli.vcxproj -nologo -getProperty:TargetPath /p:Configuration=Release /p:Platform=x64
+./Tests/Sync.Tests.ps1 -Executable $cli
+./Tests/Run.ps1 -Executable $cli
 ```
 
 Standalone собирает тот же main.cpp и производственную модель со статическим CRT. Старые команды вставки, --normalize, analyze и prune сохранены. ProjectTools получает отдельный проверяемый архив этой dev-сборки; существующая закреплённая поставка UDK Connect не заменяется. Публикация релиза не выполнялась.
@@ -47,9 +48,21 @@ SolutionInjector.exe prune "C:\Projects\Application\Application.sln" --scope Uni
 
 ```powershell
 MSBuild Tests\CleanupTests.vcxproj /p:Configuration=Release /p:Platform=x64
-& .\Tests\Run.ps1 -Executable .\!artifacts\tests\bin\CleanupTests.exe
+$tests = & MSBuild Tests\CleanupTests.vcxproj -nologo -getProperty:TargetPath /p:Configuration=Release /p:Platform=x64
+& .\Tests\Run.ps1 -Executable $tests
 ```
 
 Тестовый исполняемый файл использует производственные анализатор, планировщик, модель и парсеры; исключает несвязанные графические модули старого UtilityHelpersLib. Проверяются несколько потребителей, отключение последнего, зависимости решения, дополнительные корни, сохранение неизвестных секций, блокировка неоднозначного анализа и повторное применение.
 
 Основной проект сохраняет зависимость от UtilityHelpersLib и toolset v142. В установленном окружении с v145 полная сборка также требует устранения существующих ошибок в старом submodule (Conversion.h и TextureDesc.cpp); submodule в этих изменениях не обновлялся.
+
+## Каталоги сборки
+
+Основной проект, SolutionInjector.Cli и CleanupTests подключают Projects/BuildLayout.props и используют схему UDK:
+
+```text
+!artifacts/projects/Windows-<Platform>/msbuild/<Project>/<Toolset>/<VCToolsVersion>/<md|mt>/<Configuration>/bin/
+!artifacts/projects/Windows-<Platform>/msbuild/<Project>/<Toolset>/<VCToolsVersion>/<md|mt>/<Configuration>/obj/
+```
+
+Основной проект и CleanupTests используют каталог md, CLI со статическим CRT — mt. Имя выходного EXE CLI остаётся SolutionInjector.exe, а каталог проекта называется SolutionInjector.Cli. Пути не зависят от рабочего каталога или расположения solution. Release больше не копируется в корневой bin. Фактический путь EXE можно получить через MSBuild -getProperty:TargetPath без запуска сборки.

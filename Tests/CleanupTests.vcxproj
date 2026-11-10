@@ -14,10 +14,7 @@
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
-  <PropertyGroup>
-    <OutDir>$(MSBuildThisFileDirectory)..\!artifacts\tests\bin\</OutDir>
-    <IntDir>$(MSBuildThisFileDirectory)..\!artifacts\tests\obj\</IntDir>
-  </PropertyGroup>
+  <Import Project="..\Projects\BuildLayout.props" />
   <ItemDefinitionGroup>
     <ClCompile>
       <LanguageStandard>stdcpp20</LanguageStandard>
