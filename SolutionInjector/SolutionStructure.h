@@ -7,10 +7,15 @@
 #include "Model/ISerializable.h"
 
 #include <unordered_map>
+#include <unordered_set>
 #include <filesystem>
+#include <functional>
+#include <memory>
+#include <string>
 #include <vector>
 
 namespace Core {
+	namespace IO { class FileSnapshot; }
 	class DefaultSolutionStructureProvider;
 
 	class SolutionStructure : public Model::ISerializable {
@@ -53,6 +58,13 @@ namespace Core {
 		void AddProjectBlock(const std::ex::shared_ptr<Model::Project::ParsedProjectBlock>& srcProjectBlock);
 		void RemoveProjectBlock(const H::Guid& projectGuid);
 
+		void SynchronizeFrom(
+			const SolutionStructure& solutionStructure,
+			const std::string& owner,
+			const std::vector<H::Guid>& adoptedProjects,
+			IO::FileSnapshot& fileSnapshot
+		);
+
 		std::ex::shared_ptr<Model::Project::SolutionFolder> MakeFolder(std::string name);
 
 		void AttachChild(const H::Guid& parentGuid, const H::Guid& childGuid);
@@ -63,6 +75,24 @@ namespace Core {
 		);
 
 	private:
+		struct SyncContext;
+
+		SyncContext PrepareSyncContext(
+			const SolutionStructure& solutionStructure,
+			const std::string& owner,
+			const std::vector<H::Guid>& adoptedProjects
+		) const;
+
+		void ValidateSyncProjects(SyncContext& syncContext) const;
+		void ValidateSyncDependencies(const SyncContext& syncContext, IO::FileSnapshot& fileSnapshot) const;
+		void ValidateSyncMetadata(const SyncContext& syncContext) const;
+
+		void ReplaceSyncProjectBlocks(const SyncContext& syncContext);
+		void SynchronizeProjectConfigurations(const SyncContext& syncContext);
+		void SynchronizeProjectNesting(const SyncContext& syncContext);
+		void SynchronizeSharedReferences(const SyncContext& syncContext);
+		void WriteSyncOwnership(SyncContext& syncContext);
+
 		void AddProjectBlockRecursive(const std::ex::shared_ptr<Model::Project::ParsedProjectBlock>& srcProjectBlock);
 		void RemoveProjectBlockRecursive(const H::Guid& projectGuid);
 

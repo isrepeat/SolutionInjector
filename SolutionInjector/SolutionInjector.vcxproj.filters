@@ -127,6 +127,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Cli\CleanupCommand.cpp"><Filter>Source Files\Cli</Filter></ClCompile>
+    <ClCompile Include="Cli\SyncCommand.cpp"><Filter>Source Files\Cli</Filter></ClCompile>
+    <ClInclude Include="Cli\SyncCommand.h"><Filter>Source Files\Cli</Filter></ClInclude>
+    <ClCompile Include="Operations\SolutionSync.cpp"><Filter>Source Files\Operations</Filter></ClCompile>
     <ClCompile Include="Cli\JsonSerializer.cpp"><Filter>Source Files\Cli</Filter></ClCompile>
     <ClInclude Include="Cli\CleanupCommand.h"><Filter>Source Files\Cli</Filter></ClInclude>
     <ClInclude Include="Cli\JsonScheme.h"><Filter>Source Files\Cli</Filter></ClInclude>

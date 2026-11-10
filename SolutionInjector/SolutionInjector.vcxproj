@@ -133,6 +133,8 @@
     <ClCompile Include="DefaultSolutionStructureProvider.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Cli\CleanupCommand.cpp" />
+    <ClCompile Include="Cli\SyncCommand.cpp" />
+    <ClCompile Include="Operations\SolutionSync.cpp" />
     <ClCompile Include="Cli\JsonSerializer.cpp" />
     <ClCompile Include="Dependencies\DependencyGraph.cpp" />
     <ClCompile Include="Dependencies\MsBuildDependencyReader.cpp" />
@@ -147,6 +149,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="DefaultSolutionStructureProvider.h" />
+    <ClInclude Include="Cli\SyncCommand.h" />
     <ClInclude Include="Cli/CleanupCommand.h" />
     <ClInclude Include="Cli/JsonScheme.h" />
     <ClInclude Include="Cli/JsonSerializer.h" />

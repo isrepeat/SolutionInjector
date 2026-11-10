@@ -4,11 +4,13 @@
 #include <Helpers/Logger.h>
 
 #include "Cli/CleanupCommand.h"
+#include "Cli/SyncCommand.h"
 #include "SolutionFileAnalyzer.h"
 #include "SolutionStructure.h"
 
 #include <unordered_set>
 #include <system_error>
+#include <string_view>
 #include <iostream>
 #include <string>
 
@@ -232,6 +234,9 @@ private:
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 //
 int main(int argc, char* argv[]) {
+	if (argc > 1 && std::string_view(argv[1]) == "sync") {
+		return Core::Cli::RunSyncCommand(argc, argv);
+	}
 	auto descriptions = CmdArgs::Description();
 	for (auto flagDesc : Core::Cli::CleanupArgs::Description()) {
 		flagDesc.required = false;
@@ -252,11 +257,12 @@ int main(int argc, char* argv[]) {
 			std::cerr << "--version must be used alone\n";
 			return 1;
 		}
-		std::cout << "SolutionInjector (analyze, prune, scoped-cleanup)\n";
+		std::cout << "SolutionInjector 1.1.0 (sync, analyze, prune, scoped-cleanup)\n";
 		return 0;
 	}
 
 	// Инициализируем логирование; JSON-команды не пишут служебные логи в stdout.
+#if SPDLOG_SUPPORT
 	H::Flags<lg::InitFlags> loggerInitFlags =
 		lg::InitFlags::DefaultFlags |
 		lg::InitFlags::CreateInExeFolderForDesktop;
@@ -265,6 +271,7 @@ int main(int argc, char* argv[]) {
 		loggerInitFlags |= lg::InitFlags::EnableLogToStdout;
 	}
 	lg::DefaultLoggers::Init(L"SolutionInjector.log", loggerInitFlags);
+#endif
 	if (cleanupCommand) {
 		try {
 			const auto cleanupArgs = H::CommandLineParserA::ParseTo<Core::Cli::CleanupArgs>(argc, argv);

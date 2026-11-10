@@ -30,6 +30,8 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="CommandHost.cpp" />
+    <ClCompile Include="..\SolutionInjector\Cli\SyncCommand.cpp" />
+    <ClCompile Include="..\SolutionInjector\Operations\SolutionSync.cpp" />
     <ClCompile Include="..\SolutionInjector\Cli\CleanupCommand.cpp" />
     <ClCompile Include="..\SolutionInjector\Cli\JsonSerializer.cpp" />
     <ClCompile Include="..\SolutionInjector\Dependencies\DependencyGraph.cpp" />
