@@ -158,7 +158,8 @@ namespace Core {
 				const bool reference = !include.empty();
 				const auto raw = reference ? include : Attribute(node.Get(), L"Project");
 				// Стандартные импорты toolchain не обходятся как проекты решения.
-				if (!reference && (raw.rfind("$(VCTargetsPath)", 0) == 0 || raw.rfind("$(MSBuildToolsPath)", 0) == 0 ||
+				if (!reference && (!Attribute(node.Get(), L"Sdk").empty() ||
+					raw.rfind("$(VCTargetsPath)", 0) == 0 || raw.rfind("$(MSBuildToolsPath)", 0) == 0 ||
 					raw.rfind("$(MSBuildExtensionsPath", 0) == 0 || raw.rfind("$(UserRootDir)", 0) == 0)) {
 					continue;
 				}

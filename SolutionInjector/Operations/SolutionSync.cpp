@@ -225,20 +225,22 @@ namespace Core {
 
 		// 2. Проверяем транзитивные XML-зависимости всех посторонних потребителей.
 		if (!retiredPaths.empty()) {
-			const auto dependencyGraph = Dependencies::ProjectDependencyAnalyzer::Analyze(*this, fileSnapshot);
-			if (!dependencyGraph.issues.empty()) {
-				throw std::runtime_error("Cannot safely remove projects: " + *dependencyGraph.issues.begin());
-			}
 			std::set<std::string> roots;
 			for (const auto& [guid, node] : syncContext.targetView->mapGuidToSolutionNode) {
 				if (!syncContext.IsManaged(guid) && node.Is<Model::Project::ProjectNode>()) {
 					roots.insert(guid.ToString());
 				}
 			}
-			const auto reachable = dependencyGraph.Reachable(roots);
-			for (const auto& guid : syncContext.previous) {
-				if (retiredPaths.contains(guid) && reachable.contains(guid.ToString())) {
-					throw std::runtime_error("Unmanaged consumer depends on a removed or relocated project");
+			if (!roots.empty()) {
+				const auto dependencyGraph = Dependencies::ProjectDependencyAnalyzer::Analyze(*this, fileSnapshot);
+				if (!dependencyGraph.issues.empty()) {
+					throw std::runtime_error("Cannot safely remove projects: " + *dependencyGraph.issues.begin());
+				}
+				const auto reachable = dependencyGraph.Reachable(roots);
+				for (const auto& guid : syncContext.previous) {
+					if (retiredPaths.contains(guid) && reachable.contains(guid.ToString())) {
+						throw std::runtime_error("Unmanaged consumer depends on a removed or relocated project");
+					}
 				}
 			}
 		}

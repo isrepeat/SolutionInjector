@@ -71,12 +71,12 @@ try {
     Assert (-not $report.changed) 'Second updated sync was not stable'
 
     # Посторонняя XML-ссылка блокирует удаление управляемого проекта.
-    WriteFile (Join-Path $workspace 'Host.vcxproj') '<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003"><ItemGroup><ProjectReference Include="Renamed.vcxproj" /></ItemGroup></Project>'
+    WriteFile (Join-Path $workspace 'Host.vcxproj') '<Project><Import Project="Sdk.props" Sdk="Microsoft.NET.Sdk" /><ItemGroup><ProjectReference Include="Renamed.vcxproj" /></ItemGroup><Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" /></Project>'
     WriteFile $source (Solution @() @())
     $before = [IO.File]::ReadAllText($target)
     $report = Sync 2 @('--apply')
     Assert ($report.blocked -and [IO.File]::ReadAllText($target) -ceq $before) 'External reference did not block removal'
-    WriteFile (Join-Path $workspace 'Host.vcxproj') '<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003" />'
+    WriteFile (Join-Path $workspace 'Host.vcxproj') '<Project><Import Project="Sdk.props" Sdk="Microsoft.NET.Sdk" /><Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" /></Project>'
     $report = Sync 0 @('--apply')
     Assert (-not [IO.File]::ReadAllText($target).Contains($ownedGuid) -and [IO.File]::ReadAllText($target).Contains($hostGuid)) 'Owned removal affected unmanaged host'
     Assert (@(Get-ChildItem -LiteralPath $workspace -Filter 'target.sln.SolutionInjector.*.bak').Count -ge 3) 'Sync backup was not created'
@@ -96,6 +96,13 @@ try {
     $report = Sync 0 @('--apply')
     $bytes = [IO.File]::ReadAllBytes($target)
     Assert ($bytes[0] -eq 239 -and $bytes[1] -eq 187 -and $bytes[2] -eq 191 -and [IO.File]::ReadAllText($target).Contains("`r`n")) 'BOM/CRLF were not retained'
+    WriteFile $target (Solution @() @())
+    WriteFile $source (Solution @((Project 'Owned' 'Owned.vcxproj' $ownedGuid)) @("`t`t$ownedGuid.Debug|x64.ActiveCfg = Debug|x64"))
+    $report = Sync 0 @('--apply')
+    WriteFile (Join-Path $workspace 'Owned.vcxproj') '<Project><Import Project="Sdk.props" Sdk="Microsoft.NET.Sdk" /><Import Project="$(PackageToolchain)/Build.targets" /></Project>'
+    WriteFile $source (Solution @() @())
+    $report = Sync 0 @('--apply')
+    Assert (-not [IO.File]::ReadAllText($target).Contains($ownedGuid)) 'Owned toolchain imports blocked complete cleanup'
     Write-Host "PASS: sync ($checks checks)."
 } finally {
     $resolved = [IO.Path]::GetFullPath($workspace)
